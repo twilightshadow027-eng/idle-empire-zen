@@ -241,3 +241,79 @@ export function claimDailyReward(state: GameState): GameState {
   return next;
 }
 
+export function canSpin(state: GameState): boolean {
+  return Date.now() - state.lastWheelSpin >= WHEEL_COOLDOWN_MS;
+}
+
+export function getWheelResult() {
+  const r = Math.random();
+  let acc = 0;
+  for (const seg of WHEEL_SEGMENTS) {
+    acc += seg.chance;
+    if (r <= acc) return seg;
+  }
+  return WHEEL_SEGMENTS[WHEEL_SEGMENTS.length - 1];
+}
+
+export function spinWheel(state: GameState, empNames: string[]): GameState {
+  if (!canSpin(state)) return state;
+  const result = getWheelResult();
+  const now = Date.now();
+  let next: GameState = { ...state, lastWheelSpin: now };
+
+  switch (result.type) {
+    case 'cash':
+      next.money += result.value;
+      next.totalEarned += result.value;
+      break;
+    case 'mega_cash':
+      next.money += result.value;
+      next.totalEarned += result.value;
+      break;
+    case 'speed':
+      next.activeBoosts = [...next.activeBoosts, {
+        id: crypto.randomUUID(), type: 'speed', multiplier: result.value, expiresAt: now + 5 * 60 * 1000,
+      }];
+      break;
+    case 'income':
+      next.activeBoosts = [...next.activeBoosts, {
+        id: crypto.randomUUID(), type: 'income', multiplier: result.value, expiresAt: now + 5 * 60 * 1000,
+      }];
+      break;
+    case 'upgrade': {
+      const affordable = UPGRADES.filter((u) => !state.upgrades[u.id]).sort((a, b) => a.cost - b.cost);
+      if (affordable.length) {
+        const u = affordable[0];
+        next.upgrades = { ...next.upgrades, [u.id]: true };
+      }
+      break;
+    }
+    case 'employee': {
+      const roles: import('./types').EmployeeRole[] = ['Manager', 'Accountant', 'Spy', 'Engineer', 'Negotiator', 'Security'];
+      const role = roles[Math.floor(Math.random() * roles.length)];
+      const base = role === 'Manager' ? 5000 : role === 'Engineer' ? 8000 : role === 'Spy' ? 12000 : 3000;
+      const emp = {
+        id: crypto.randomUUID(),
+        name: empNames[Math.floor(Math.random() * empNames.length)],
+        role,
+        intelligence: 30 + Math.floor(Math.random() * 70),
+        loyalty: 30 + Math.floor(Math.random() * 70),
+        greed: 10 + Math.floor(Math.random() * 80),
+        productivity: 30 + Math.floor(Math.random() * 70),
+        salary: base,
+        hiredAt: now,
+      };
+      next.employees = [...next.employees, emp];
+      break;
+    }
+    case 'prestige_dust':
+      next.prestigePoints += result.value;
+      break;
+    case 'nothing':
+    default:
+      break;
+  }
+  return next;
+}
+
+
