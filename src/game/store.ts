@@ -136,6 +136,7 @@ export const useGame = create<Store>((set, get) => ({
   },
 
   claimDailyReward: () => set({ state: claimDailyReward(get().state) }),
+  spinWheelAction: () => set({ state: spinWheel(get().state, EMPLOYEE_NAMES) }),
 
   clearOffline: () => set({ offlineEarned: 0 }),
   reset: () => {
