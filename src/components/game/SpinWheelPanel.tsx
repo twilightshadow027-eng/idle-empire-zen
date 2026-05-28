@@ -19,13 +19,14 @@ const ICON_MAP: Record<string, React.ReactNode> = {
   '🌪️': <Frown className="h-4 w-4" />,
 };
 
-function buildConicGradient() {
-  const stops = WHEEL_SEGMENTS.map((seg, i) => {
-    const start = i * SEGMENT_ANGLE;
-    const end = (i + 1) * SEGMENT_ANGLE;
-    return `${seg.color} ${start}deg ${end}deg`;
-  });
-  return `conic-gradient(from -${SEGMENT_ANGLE / 2}deg, ${stops.join(', ')})`;
+function wedgeClip(startDeg: number, endDeg: number): string {
+  const toRad = (d: number) => (d * Math.PI) / 180;
+  const cx = 50, cy = 50, r = 50;
+  const p1x = cx + r * Math.sin(toRad(startDeg));
+  const p1y = cy - r * Math.cos(toRad(startDeg));
+  const p2x = cx + r * Math.sin(toRad(endDeg));
+  const p2y = cy - r * Math.cos(toRad(endDeg));
+  return `polygon(${cx}% ${cy}%, ${p1x.toFixed(1)}% ${p1y.toFixed(1)}%, ${p2x.toFixed(1)}% ${p2y.toFixed(1)}%)`;
 }
 
 export function SpinWheelPanel() {
