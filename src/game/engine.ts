@@ -43,7 +43,14 @@ export function loadState(): GameState {
     const parsed = JSON.parse(raw) as GameState;
     // Heal missing fields from updates
     const fresh = createInitialState();
-    return { ...fresh, ...parsed, businesses: { ...fresh.businesses, ...parsed.businesses }, industries: { ...fresh.industries, ...parsed.industries }, clan: { ...fresh.clan, ...parsed.clan } };
+    return {
+      ...fresh, ...parsed,
+      businesses: { ...fresh.businesses, ...parsed.businesses },
+      industries: { ...fresh.industries, ...parsed.industries },
+      clan: { ...fresh.clan, ...parsed.clan },
+      activeBoosts: parsed.activeBoosts ?? [],
+      lastWheelSpin: parsed.lastWheelSpin ?? 0,
+    };
   } catch {
     return createInitialState();
   }
