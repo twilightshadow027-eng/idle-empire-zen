@@ -36,3 +36,13 @@ export const EMPLOYEE_NAMES = [
   'Jin Park', 'Nora Hassan', 'Liam Brooks', 'Yuki Tanaka', 'Eli Cohen',
   'Zara Khan', 'Theo Lange', 'Mira Singh', 'Owen Black', 'Lyra Stone',
 ];
+
+export const DAILY_REWARDS = [
+  { day: 1, money: 500, title: 'Starter Pack', icon: '📦' },
+  { day: 2, money: 1_500, title: 'Growing Empire', icon: '📈' },
+  { day: 3, money: 3_000, title: 'Business Boom', icon: '💼' },
+  { day: 4, money: 6_000, title: 'Mogul Milestone', icon: '💎' },
+  { day: 5, money: 12_000, title: 'Tycoon Tuesday', icon: '🏆' },
+  { day: 6, money: 25_000, title: 'Empire Builder', icon: '🏢' },
+  { day: 7, money: 50_000, prestige: 1, title: 'Legendary Loot', icon: '👑' },
+] as const;

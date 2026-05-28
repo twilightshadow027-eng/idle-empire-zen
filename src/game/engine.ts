@@ -180,3 +180,50 @@ export function formatMoney(n: number): string {
   const v = n / Math.pow(1000, tier);
   return `$${v.toFixed(v < 10 ? 2 : v < 100 ? 1 : 0)}${units[tier] ?? 'e' + tier * 3}`;
 }
+
+function getToday(): string {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+function isYesterday(today: string, lastDate: string): boolean {
+  const t = new Date(today + 'T00:00:00');
+  const l = new Date(lastDate + 'T00:00:00');
+  const diff = (t.getTime() - l.getTime()) / (1000 * 60 * 60 * 24);
+  return diff === 1;
+}
+
+export function canClaimToday(state: GameState): boolean {
+  if (!state.lastClaimedDate) return true;
+  return state.lastClaimedDate !== getToday();
+}
+
+export function claimDailyReward(state: GameState): GameState {
+  if (!canClaimToday(state)) return state;
+  const today = getToday();
+  const streak = state.lastClaimedDate && isYesterday(today, state.lastClaimedDate)
+    ? Math.min(state.claimStreak + 1, 7)
+    : 1;
+  const reward = DAILY_REWARDS[streak - 1];
+  let next: GameState = {
+    ...state,
+    money: state.money + reward.money,
+    totalEarned: state.totalEarned + reward.money,
+    claimStreak: streak,
+    lastClaimedDate: today,
+  };
+  if (reward.prestige) {
+    next.prestigePoints = next.prestigePoints + reward.prestige;
+  }
+  return next;
+}
+
+export const DAILY_REWARDS = [
+  { day: 1, money: 500, title: 'Starter Pack', icon: '📦' },
+  { day: 2, money: 1_500, title: 'Growing Empire', icon: '📈' },
+  { day: 3, money: 3_000, title: 'Business Boom', icon: '💼' },
+  { day: 4, money: 6_000, title: 'Mogul Milestone', icon: '💎' },
+  { day: 5, money: 12_000, title: 'Tycoon Tuesday', icon: '🏆' },
+  { day: 6, money: 25_000, title: 'Empire Builder', icon: '🏢' },
+  { day: 7, money: 50_000, prestige: 1, title: 'Legendary Loot', icon: '👑' },
+];
