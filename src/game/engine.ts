@@ -212,7 +212,7 @@ export function claimDailyReward(state: GameState): GameState {
     claimStreak: streak,
     lastClaimedDate: today,
   };
-  if (reward.prestige) {
+  if ('prestige' in reward && reward.prestige) {
     next.prestigePoints = next.prestigePoints + reward.prestige;
   }
   return next;
