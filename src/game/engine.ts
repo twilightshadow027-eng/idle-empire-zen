@@ -126,6 +126,12 @@ export function tick(state: GameState, dtSec: number): { state: GameState; earne
     }
   });
 
+  // Clean expired boosts
+  const now = Date.now();
+  if (next.activeBoosts.some((b) => b.expiresAt <= now)) {
+    next.activeBoosts = next.activeBoosts.filter((b) => b.expiresAt > now);
+  }
+
   // Drift market prices
   (Object.keys(next.industries) as IndustryId[]).forEach((id) => {
     const ind = next.industries[id];
