@@ -134,6 +134,8 @@ export const useGame = create<Store>((set, get) => ({
     });
   },
 
+  claimDailyReward: () => set({ state: claimDailyReward(get().state) }),
+
   clearOffline: () => set({ offlineEarned: 0 }),
   reset: () => {
     localStorage.removeItem('idle-empire-save-v1');
