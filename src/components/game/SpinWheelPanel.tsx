@@ -35,7 +35,7 @@ export function SpinWheelPanel() {
 
   const [rotation, setRotation] = useState(0);
   const [spinning, setSpinning] = useState(false);
-  const [result, setResult] = useState<typeof WheelSegs[number] | null>(null);
+  const [result, setResult] = useState<WheelSegment | null>(null);
   const [showResult, setShowResult] = useState(false);
   const [cooldownText, setCooldownText] = useState('');
   const wheelRef = useRef<HTMLDivElement>(null);
