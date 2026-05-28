@@ -31,6 +31,8 @@ export function createInitialState(): GameState {
     prestigePoints: 0,
     lastClaimedDate: '',
     claimStreak: 0,
+    lastWheelSpin: 0,
+    activeBoosts: [],
   };
 }
 
