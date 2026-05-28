@@ -68,6 +68,7 @@ const Index = () => {
             {tab === 'market' && <MarketPanel />}
             {tab === 'clan' && <ClanPanel />}
             {tab === 'rewards' && <DailyRewardsPanel />}
+            {tab === 'wheel' && <SpinWheelPanel />}
           </section>
 
           <button
