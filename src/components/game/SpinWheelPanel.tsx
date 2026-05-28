@@ -120,7 +120,7 @@ export function SpinWheelPanel() {
         {/* Outer ring glow */}
         <div
           className={cn(
-            'absolute rounded-full transition-all duration-500',
+            'absolute rounded-full transition-all',
             available && !spinning && 'shadow-[0_0_40px_hsl(var(--primary)/0.3)]'
           )}
           style={{ width: 260, height: 260 }}
@@ -131,20 +131,37 @@ export function SpinWheelPanel() {
           ref={wheelRef}
           className={cn(
             'relative h-64 w-64 rounded-full border-4 border-border/80 shadow-2xl',
-            spinning ? 'transition-transform duration-[4000ms] ease-[cubic-bezier(0.17,0.67,0.12,0.99)]' : 'transition-transform duration-300'
+            spinning ? 'transition-transform duration-[4000ms]' : 'transition-transform duration-300'
           )}
           style={{
-            background: buildConicGradient(),
             transform: `rotate(${rotation}deg)`,
+            transitionTimingFunction: spinning ? 'cubic-bezier(0.17,0.67,0.12,0.99)' : undefined,
           }}
         >
-          {/* Segment labels */}
+          {/* Segments using clip-path wedges */}
           {WHEEL_SEGMENTS.map((seg, i) => {
-            const angle = i * SEGMENT_ANGLE;
+            const start = i * SEGMENT_ANGLE - SEGMENT_ANGLE / 2;
+            const end = (i + 1) * SEGMENT_ANGLE - SEGMENT_ANGLE / 2;
             return (
               <div
                 key={seg.type}
-                className="absolute left-1/2 top-1/2 flex h-8 w-8 -translate-x-1/2 -translate-y-1/2 items-center justify-center text-white/90"
+                className="absolute inset-0 rounded-full"
+                style={{
+                  backgroundColor: seg.color,
+                  clipPath: wedgeClip(start, end),
+                  opacity: 0.9,
+                }}
+              />
+            );
+          })}
+
+          {/* Segment labels */}
+          {WHEEL_SEGMENTS.map((seg, i) => {
+            const angle = i * SEGMENT_ANGLE - SEGMENT_ANGLE / 2 + SEGMENT_ANGLE / 2;
+            return (
+              <div
+                key={`label-${seg.type}`}
+                className="pointer-events-none absolute left-1/2 top-1/2 flex h-8 w-8 -translate-x-1/2 -translate-y-1/2 items-center justify-center text-white/90"
                 style={{
                   transform: `translate(-50%, -50%) rotate(${angle}deg) translateY(-88px)`,
                 }}
@@ -155,7 +172,7 @@ export function SpinWheelPanel() {
           })}
 
           {/* Center hub */}
-          <div className="absolute left-1/2 top-1/2 flex h-16 w-16 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-4 border-border bg-card shadow-xl">
+          <div className="absolute left-1/2 top-1/2 flex h-16 w-16 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-4 border-border bg-card shadow-xl z-10">
             <span className="text-2xl font-bold text-gradient-gold">E</span>
           </div>
         </div>
