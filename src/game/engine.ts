@@ -1,4 +1,4 @@
-import { BUSINESSES, COST_GROWTH, UPGRADES, INDUSTRY_NAMES } from './config';
+import { BUSINESSES, COST_GROWTH, UPGRADES, INDUSTRY_NAMES, DAILY_REWARDS } from './config';
 import { BusinessId, BusinessState, GameState, IndustryId, IndustryState } from './types';
 
 export const STORAGE_KEY = 'idle-empire-save-v1';
@@ -29,6 +29,8 @@ export function createInitialState(): GameState {
     clan: { name: 'Solo Tycoon', rank: 9999, influence: 0, members: 1, vault: 0 },
     lastTick: Date.now(),
     prestigePoints: 0,
+    lastClaimedDate: '',
+    claimStreak: 0,
   };
 }
 
@@ -178,3 +180,41 @@ export function formatMoney(n: number): string {
   const v = n / Math.pow(1000, tier);
   return `$${v.toFixed(v < 10 ? 2 : v < 100 ? 1 : 0)}${units[tier] ?? 'e' + tier * 3}`;
 }
+
+function getToday(): string {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+function isYesterday(today: string, lastDate: string): boolean {
+  const t = new Date(today + 'T00:00:00');
+  const l = new Date(lastDate + 'T00:00:00');
+  const diff = (t.getTime() - l.getTime()) / (1000 * 60 * 60 * 24);
+  return diff === 1;
+}
+
+export function canClaimToday(state: GameState): boolean {
+  if (!state.lastClaimedDate) return true;
+  return state.lastClaimedDate !== getToday();
+}
+
+export function claimDailyReward(state: GameState): GameState {
+  if (!canClaimToday(state)) return state;
+  const today = getToday();
+  const streak = state.lastClaimedDate && isYesterday(today, state.lastClaimedDate)
+    ? Math.min(state.claimStreak + 1, 7)
+    : 1;
+  const reward = DAILY_REWARDS[streak - 1];
+  let next: GameState = {
+    ...state,
+    money: state.money + reward.money,
+    totalEarned: state.totalEarned + reward.money,
+    claimStreak: streak,
+    lastClaimedDate: today,
+  };
+  if ('prestige' in reward && reward.prestige) {
+    next.prestigePoints = next.prestigePoints + reward.prestige;
+  }
+  return next;
+}
+

@@ -8,11 +8,12 @@ import { EmployeesPanel } from '@/components/game/EmployeesPanel';
 import { MarketPanel } from '@/components/game/MarketPanel';
 import { ClanPanel } from '@/components/game/ClanPanel';
 import { MissionsPanel } from '@/components/game/MissionsPanel';
+import { DailyRewardsPanel } from '@/components/game/DailyRewardsPanel';
 import { OfflineModal } from '@/components/game/OfflineModal';
-import { Briefcase, ChevronUp, Users, LineChart, Crown, RotateCcw } from 'lucide-react';
+import { Briefcase, ChevronUp, Users, LineChart, Crown, RotateCcw, Gift } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-type Tab = 'businesses' | 'upgrades' | 'employees' | 'market' | 'clan';
+type Tab = 'businesses' | 'upgrades' | 'employees' | 'market' | 'clan' | 'rewards';
 
 const TABS: { id: Tab; label: string; icon: typeof Briefcase }[] = [
   { id: 'businesses', label: 'Biz', icon: Briefcase },
@@ -20,6 +21,7 @@ const TABS: { id: Tab; label: string; icon: typeof Briefcase }[] = [
   { id: 'employees', label: 'Staff', icon: Users },
   { id: 'market', label: 'Market', icon: LineChart },
   { id: 'clan', label: 'Clan', icon: Crown },
+  { id: 'rewards', label: 'Daily', icon: Gift },
 ];
 
 const Index = () => {
@@ -63,6 +65,7 @@ const Index = () => {
             {tab === 'employees' && <EmployeesPanel />}
             {tab === 'market' && <MarketPanel />}
             {tab === 'clan' && <ClanPanel />}
+            {tab === 'rewards' && <DailyRewardsPanel />}
           </section>
 
           <button
