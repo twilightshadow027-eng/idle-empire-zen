@@ -31,8 +31,7 @@ export function TopBar() {
           {dailyAvailable && (
             <button
               onClick={() => {
-                const btn = document.querySelector('nav button') as HTMLButtonElement | null;
-                const rewardsBtn = Array.from(document.querySelectorAll('nav button')).find(b => b.textContent?.includes('Daily'));
+                const rewardsBtn = Array.from(document.querySelectorAll('nav button')).find(b => b.textContent?.includes('Daily')) as HTMLElement | undefined;
                 rewardsBtn?.click();
               }}
               className={cn(
