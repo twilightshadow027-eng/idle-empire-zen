@@ -76,6 +76,24 @@ export interface DailyReward {
   icon: string;
 }
 
+export type WheelSegmentType = 'cash' | 'speed' | 'income' | 'upgrade' | 'employee' | 'mega_cash' | 'prestige_dust' | 'nothing';
+
+export interface WheelSegment {
+  type: WheelSegmentType;
+  label: string;
+  icon: string;
+  color: string; // CSS color for segment
+  chance: number; // weight 0-1
+  value: number;  // cash amount, multiplier, or minutes
+}
+
+export interface ActiveBoost {
+  id: string;
+  type: 'speed' | 'income';
+  multiplier: number;
+  expiresAt: number; // timestamp
+}
+
 export interface GameState {
   money: number;
   totalEarned: number;
@@ -91,4 +109,7 @@ export interface GameState {
   // Daily rewards
   lastClaimedDate: string; // YYYY-MM-DD
   claimStreak: number;
+  // Wheel
+  lastWheelSpin: number; // timestamp
+  activeBoosts: ActiveBoost[];
 }
