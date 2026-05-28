@@ -11,6 +11,7 @@ export function TopBar() {
   const industries = useGame((s) => s.state.industries);
   const state = useGame((s) => s.state);
   const dailyAvailable = canClaimToday(state);
+  const wheelAvailable = canSpin(state);
 
   const tickerItems = Object.values(industries);
 
