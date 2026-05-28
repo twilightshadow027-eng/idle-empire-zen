@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { BusinessId, GameState } from './types';
-import { buyOrUpgrade, buyUpgrade, calculateOfflineEarnings, collectBusiness, loadState, saveState, tick } from './engine';
+import { buyOrUpgrade, buyUpgrade, calculateOfflineEarnings, collectBusiness, claimDailyReward, loadState, saveState, tick } from './engine';
 import { EMPLOYEE_NAMES } from './config';
 
 interface FloatingNumber { id: number; amount: number; x: number; y: number; }
@@ -18,6 +18,7 @@ interface Store {
   fireEmployee: (id: string) => void;
   assignManager: (employeeId: string, businessId: BusinessId) => void;
   prestige: () => void;
+  claimDailyReward: () => void;
   clearOffline: () => void;
   reset: () => void;
 }

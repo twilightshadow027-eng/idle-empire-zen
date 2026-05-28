@@ -1,4 +1,4 @@
-import { BUSINESSES, COST_GROWTH, UPGRADES, INDUSTRY_NAMES } from './config';
+import { BUSINESSES, COST_GROWTH, UPGRADES, INDUSTRY_NAMES, DAILY_REWARDS } from './config';
 import { BusinessId, BusinessState, GameState, IndustryId, IndustryState } from './types';
 
 export const STORAGE_KEY = 'idle-empire-save-v1';

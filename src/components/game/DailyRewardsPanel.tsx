@@ -62,7 +62,7 @@ export function DailyRewardsPanel() {
               <span className="text-[10px] font-bold text-gradient-gold">
                 {formatMoney(r.money)}
               </span>
-              {r.prestige && (
+              {'prestige' in r && r.prestige && (
                 <span className="text-[9px] font-bold text-primary">+{r.prestige} PP</span>
               )}
               {claimed && (
