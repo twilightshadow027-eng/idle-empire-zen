@@ -29,6 +29,8 @@ export function createInitialState(): GameState {
     clan: { name: 'Solo Tycoon', rank: 9999, influence: 0, members: 1, vault: 0 },
     lastTick: Date.now(),
     prestigePoints: 0,
+    lastClaimedDate: '',
+    claimStreak: 0,
   };
 }
 
