@@ -19,6 +19,7 @@ interface Store {
   assignManager: (employeeId: string, businessId: BusinessId) => void;
   prestige: () => void;
   claimDailyReward: () => void;
+  spinWheelAction: () => void;
   clearOffline: () => void;
   reset: () => void;
 }
