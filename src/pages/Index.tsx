@@ -9,11 +9,12 @@ import { MarketPanel } from '@/components/game/MarketPanel';
 import { ClanPanel } from '@/components/game/ClanPanel';
 import { MissionsPanel } from '@/components/game/MissionsPanel';
 import { DailyRewardsPanel } from '@/components/game/DailyRewardsPanel';
+import { SpinWheelPanel } from '@/components/game/SpinWheelPanel';
 import { OfflineModal } from '@/components/game/OfflineModal';
-import { Briefcase, ChevronUp, Users, LineChart, Crown, RotateCcw, Gift } from 'lucide-react';
+import { Briefcase, ChevronUp, Users, LineChart, Crown, RotateCcw, Gift, Dices } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-type Tab = 'businesses' | 'upgrades' | 'employees' | 'market' | 'clan' | 'rewards';
+type Tab = 'businesses' | 'upgrades' | 'employees' | 'market' | 'clan' | 'rewards' | 'wheel';
 
 const TABS: { id: Tab; label: string; icon: typeof Briefcase }[] = [
   { id: 'businesses', label: 'Biz', icon: Briefcase },
@@ -22,6 +23,7 @@ const TABS: { id: Tab; label: string; icon: typeof Briefcase }[] = [
   { id: 'market', label: 'Market', icon: LineChart },
   { id: 'clan', label: 'Clan', icon: Crown },
   { id: 'rewards', label: 'Daily', icon: Gift },
+  { id: 'wheel', label: 'Wheel', icon: Dices },
 ];
 
 const Index = () => {
