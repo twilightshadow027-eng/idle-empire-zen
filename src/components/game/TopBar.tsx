@@ -1,7 +1,7 @@
 import { useGame } from '@/game/store';
 import { AnimatedCounter } from './AnimatedCounter';
-import { TrendingDown, TrendingUp, Trophy, Sparkles, Gift } from 'lucide-react';
-import { canClaimToday } from '@/game/engine';
+import { TrendingDown, TrendingUp, Trophy, Sparkles, Gift, Dices } from 'lucide-react';
+import { canClaimToday, canSpin } from '@/game/engine';
 import { cn } from '@/lib/utils';
 
 export function TopBar() {
