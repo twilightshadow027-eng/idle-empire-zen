@@ -90,6 +90,14 @@ export function getGlobalMultipliers(s: GameState) {
     if (e.role === 'Accountant') income *= 1 + (e.productivity / 1000);
     if (e.role === 'Engineer') speed *= 1 + (e.productivity / 1500);
   });
+  // Active wheel boosts
+  const now = Date.now();
+  s.activeBoosts.forEach((b) => {
+    if (b.expiresAt > now) {
+      if (b.type === 'speed') speed *= b.multiplier;
+      if (b.type === 'income') income *= b.multiplier;
+    }
+  });
   return { income, speed, perBiz };
 }
 
