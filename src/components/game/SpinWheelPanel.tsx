@@ -22,11 +22,15 @@ const ICON_MAP: Record<string, React.ReactNode> = {
 function wedgeClip(startDeg: number, endDeg: number): string {
   const toRad = (d: number) => (d * Math.PI) / 180;
   const cx = 50, cy = 50, r = 50;
-  const p1x = cx + r * Math.sin(toRad(startDeg));
-  const p1y = cy - r * Math.cos(toRad(startDeg));
-  const p2x = cx + r * Math.sin(toRad(endDeg));
-  const p2y = cy - r * Math.cos(toRad(endDeg));
-  return `polygon(${cx}% ${cy}%, ${p1x.toFixed(1)}% ${p1y.toFixed(1)}%, ${p2x.toFixed(1)}% ${p2y.toFixed(1)}%)`;
+  const steps = 5;
+  const points: string[] = [`${cx}% ${cy}%`];
+  for (let s = 0; s <= steps; s++) {
+    const d = startDeg + (endDeg - startDeg) * (s / steps);
+    const x = cx + r * Math.sin(toRad(d));
+    const y = cy - r * Math.cos(toRad(d));
+    points.push(`${x.toFixed(1)}% ${y.toFixed(1)}%`);
+  }
+  return `polygon(${points.join(', ')})`;
 }
 
 export function SpinWheelPanel() {
