@@ -68,6 +68,14 @@ export interface ClanState {
   vault: number;
 }
 
+export interface DailyReward {
+  day: number;
+  money: number;
+  prestige?: number;
+  title: string;
+  icon: string;
+}
+
 export interface GameState {
   money: number;
   totalEarned: number;
@@ -80,4 +88,7 @@ export interface GameState {
   clan: ClanState;
   lastTick: number;
   prestigePoints: number;
+  // Daily rewards
+  lastClaimedDate: string; // YYYY-MM-DD
+  claimStreak: number;
 }
