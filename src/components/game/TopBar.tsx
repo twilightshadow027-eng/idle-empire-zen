@@ -1,7 +1,7 @@
 import { useGame } from '@/game/store';
 import { AnimatedCounter } from './AnimatedCounter';
-import { TrendingDown, TrendingUp, Trophy, Sparkles, Gift } from 'lucide-react';
-import { canClaimToday } from '@/game/engine';
+import { TrendingDown, TrendingUp, Trophy, Sparkles, Gift, Dices } from 'lucide-react';
+import { canClaimToday, canSpin } from '@/game/engine';
 import { cn } from '@/lib/utils';
 
 export function TopBar() {
@@ -11,6 +11,7 @@ export function TopBar() {
   const industries = useGame((s) => s.state.industries);
   const state = useGame((s) => s.state);
   const dailyAvailable = canClaimToday(state);
+  const wheelAvailable = canSpin(state);
 
   const tickerItems = Object.values(industries);
 
@@ -43,6 +44,24 @@ export function TopBar() {
               <span className="absolute -right-0.5 -top-0.5 flex h-2.5 w-2.5">
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-destructive opacity-75"></span>
                 <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-destructive"></span>
+              </span>
+            </button>
+          )}
+          {wheelAvailable && (
+            <button
+              onClick={() => {
+                const wheelBtn = Array.from(document.querySelectorAll('nav button')).find(b => b.textContent?.includes('Wheel')) as HTMLElement | undefined;
+                wheelBtn?.click();
+              }}
+              className={cn(
+                'relative flex items-center gap-1.5 rounded-lg border border-accent/60 bg-accent/15 px-2.5 py-1.5 animate-pulse',
+              )}
+            >
+              <Dices className="h-3.5 w-3.5 text-accent" />
+              <span className="hidden text-xs font-bold text-accent sm:inline">Spin Ready</span>
+              <span className="absolute -right-0.5 -top-0.5 flex h-2.5 w-2.5">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent opacity-75"></span>
+                <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-accent"></span>
               </span>
             </button>
           )}
