@@ -10,11 +10,13 @@ export function createInitialState(): GameState {
   });
   const industries = {} as Record<IndustryId, IndustryState>;
   (Object.keys(INDUSTRY_NAMES) as IndustryId[]).forEach((id) => {
+    const vol = INDUSTRY_VOLATILITY[id] ?? 1;
+    const basePrice = 20 + Math.random() * 480 * Math.max(0.5, vol);
     industries[id] = {
       id, name: INDUSTRY_NAMES[id],
-      price: 100 + Math.random() * 50,
-      trend: (Math.random() - 0.5) * 0.4,
-      history: Array.from({ length: 20 }, () => 100 + Math.random() * 30),
+      price: basePrice,
+      trend: (Math.random() - 0.5) * 0.6 * vol,
+      history: Array.from({ length: 20 }, () => basePrice * (0.85 + Math.random() * 0.3)),
     };
   });
   return {
