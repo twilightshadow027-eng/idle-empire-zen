@@ -19,7 +19,7 @@ interface Store {
   assignManager: (employeeId: string, businessId: BusinessId) => void;
   prestige: () => void;
   claimDailyReward: () => void;
-  spinWheelAction: () => void;
+  spinWheelAction: (forced?: import('./types').WheelSegment) => void;
   buyStockAction: (id: IndustryId, shares: number) => void;
   sellStockAction: (id: IndustryId, shares: number) => void;
   clearOffline: () => void;
