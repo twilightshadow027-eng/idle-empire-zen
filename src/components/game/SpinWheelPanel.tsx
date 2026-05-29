@@ -69,20 +69,19 @@ export function SpinWheelPanel() {
     setShowResult(false);
     setResult(null);
 
-    const segmentIndex = Math.floor(Math.random() * WHEEL_SEGMENTS.length);
+    // Roll the actual weighted result up-front so the wheel lands on it.
+    const landed = getWheelResult();
+    const segmentIndex = WHEEL_SEGMENTS.findIndex((s) => s.type === landed.type);
     const spins = 5;
-    const extraJitter = Math.random() * 20 - 10; // ±10deg jitter
+    const extraJitter = Math.random() * 20 - 10;
     const targetRotation = rotation + spins * 360 - (segmentIndex * SEGMENT_ANGLE + SEGMENT_ANGLE / 2) + extraJitter;
 
     setRotation(targetRotation);
 
-    // Apply the actual game spin after animation settles
     setTimeout(() => {
-      spinAction();
+      spinAction(landed as WheelSegment);
       setSpinning(false);
-      // Re-read state to get actual result... we'll derive from last spin
-      const landed = WHEEL_SEGMENTS[segmentIndex];
-      setResult(landed);
+      setResult(landed as WheelSegment);
       setShowResult(true);
     }, 4200);
   }, [spinning, available, rotation, spinAction]);
