@@ -53,6 +53,9 @@ export function loadState(): GameState {
       clan: { ...fresh.clan, ...parsed.clan },
       activeBoosts: parsed.activeBoosts ?? [],
       lastWheelSpin: parsed.lastWheelSpin ?? 0,
+      holdings: { ...fresh.holdings, ...(parsed.holdings ?? {}) },
+      totalInvested: parsed.totalInvested ?? 0,
+      totalRealized: parsed.totalRealized ?? 0,
     };
   } catch {
     return createInitialState();
