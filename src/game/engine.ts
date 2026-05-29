@@ -1,5 +1,5 @@
 import { BUSINESSES, COST_GROWTH, UPGRADES, INDUSTRY_NAMES, DAILY_REWARDS, WHEEL_SEGMENTS, WHEEL_COOLDOWN_MS } from './config';
-import { BusinessId, BusinessState, GameState, IndustryId, IndustryState } from './types';
+import { BusinessId, BusinessState, GameState, IndustryId, IndustryState, StockHolding } from './types';
 
 export const STORAGE_KEY = 'idle-empire-save-v1';
 
