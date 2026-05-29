@@ -20,6 +20,8 @@ interface Store {
   prestige: () => void;
   claimDailyReward: () => void;
   spinWheelAction: () => void;
+  buyStockAction: (id: IndustryId, shares: number) => void;
+  sellStockAction: (id: IndustryId, shares: number) => void;
   clearOffline: () => void;
   reset: () => void;
 }
