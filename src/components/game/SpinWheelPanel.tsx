@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { useGame } from '@/game/store';
-import { canSpin, formatMoney } from '@/game/engine';
+import { canSpin, formatMoney, getWheelResult } from '@/game/engine';
 import { WHEEL_SEGMENTS, WHEEL_COOLDOWN_MS } from '@/game/config';
 import type { WheelSegment } from '@/game/types';
 import { cn } from '@/lib/utils';
