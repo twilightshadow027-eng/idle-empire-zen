@@ -87,6 +87,11 @@ export interface WheelSegment {
   value: number;  // cash amount, multiplier, or minutes
 }
 
+export interface StockHolding {
+  shares: number;
+  avgCost: number;
+}
+
 export interface ActiveBoost {
   id: string;
   type: 'speed' | 'income';
