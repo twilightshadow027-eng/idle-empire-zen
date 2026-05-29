@@ -323,3 +323,39 @@ export function spinWheel(state: GameState, empNames: string[]): GameState {
 }
 
 
+
+export function buyStock(state: GameState, id: IndustryId, shares: number): GameState {
+  if (shares <= 0) return state;
+  const ind = state.industries[id];
+  const cost = ind.price * shares;
+  if (state.money < cost) return state;
+  const existing = state.holdings[id] ?? { shares: 0, avgCost: 0 };
+  const newShares = existing.shares + shares;
+  const newAvg = (existing.avgCost * existing.shares + cost) / newShares;
+  return {
+    ...state,
+    money: state.money - cost,
+    totalInvested: state.totalInvested + cost,
+    holdings: { ...state.holdings, [id]: { shares: newShares, avgCost: newAvg } },
+  };
+}
+
+export function sellStock(state: GameState, id: IndustryId, shares: number): GameState {
+  if (shares <= 0) return state;
+  const ind = state.industries[id];
+  const existing = state.holdings[id];
+  if (!existing || existing.shares < shares) return state;
+  const proceeds = ind.price * shares;
+  const remaining = existing.shares - shares;
+  const realized = proceeds - existing.avgCost * shares;
+  return {
+    ...state,
+    money: state.money + proceeds,
+    totalEarned: state.totalEarned + Math.max(0, realized),
+    totalRealized: state.totalRealized + realized,
+    holdings: {
+      ...state.holdings,
+      [id]: { shares: remaining, avgCost: remaining === 0 ? 0 : existing.avgCost },
+    },
+  };
+}
