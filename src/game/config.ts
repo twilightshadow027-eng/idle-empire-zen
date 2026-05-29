@@ -28,7 +28,15 @@ export const UPGRADES: UpgradeDef[] = [
 ];
 
 export const INDUSTRY_NAMES: Record<IndustryId, string> = {
-  food: 'Food', tech: 'Technology', energy: 'Energy', transport: 'Transport', media: 'Media', military: 'Military',
+  food: 'FOOD', tech: 'TECH', energy: 'NRG', transport: 'TRNS', media: 'MDIA', military: 'MILX',
+  crypto: 'CRYP', gold: 'AUX', oil: 'OIL', realestate: 'REIT', pharma: 'PHRM',
+  finance: 'FINX', ai: 'AI', gaming: 'GMNG', space: 'SPCE', luxury: 'LUXE',
+};
+
+export const INDUSTRY_VOLATILITY: Record<IndustryId, number> = {
+  food: 0.6, tech: 1.4, energy: 1.1, transport: 0.7, media: 1.0, military: 0.9,
+  crypto: 3.5, gold: 0.4, oil: 1.6, realestate: 0.5, pharma: 1.2,
+  finance: 1.0, ai: 2.6, gaming: 1.8, space: 2.2, luxury: 1.3,
 };
 
 export const EMPLOYEE_NAMES = [

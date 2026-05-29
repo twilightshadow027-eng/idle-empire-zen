@@ -1,4 +1,4 @@
-import { BUSINESSES, COST_GROWTH, UPGRADES, INDUSTRY_NAMES, DAILY_REWARDS, WHEEL_SEGMENTS, WHEEL_COOLDOWN_MS } from './config';
+import { BUSINESSES, COST_GROWTH, UPGRADES, INDUSTRY_NAMES, INDUSTRY_VOLATILITY, DAILY_REWARDS, WHEEL_SEGMENTS, WHEEL_COOLDOWN_MS } from './config';
 import { BusinessId, BusinessState, GameState, IndustryId, IndustryState, StockHolding } from './types';
 
 export const STORAGE_KEY = 'idle-empire-save-v1';
@@ -10,11 +10,13 @@ export function createInitialState(): GameState {
   });
   const industries = {} as Record<IndustryId, IndustryState>;
   (Object.keys(INDUSTRY_NAMES) as IndustryId[]).forEach((id) => {
+    const vol = INDUSTRY_VOLATILITY[id] ?? 1;
+    const basePrice = 20 + Math.random() * 480 * Math.max(0.5, vol);
     industries[id] = {
       id, name: INDUSTRY_NAMES[id],
-      price: 100 + Math.random() * 50,
-      trend: (Math.random() - 0.5) * 0.4,
-      history: Array.from({ length: 20 }, () => 100 + Math.random() * 30),
+      price: basePrice,
+      trend: (Math.random() - 0.5) * 0.6 * vol,
+      history: Array.from({ length: 20 }, () => basePrice * (0.85 + Math.random() * 0.3)),
     };
   });
   return {
@@ -138,13 +140,22 @@ export function tick(state: GameState, dtSec: number): { state: GameState; earne
     next.activeBoosts = next.activeBoosts.filter((b) => b.expiresAt > now);
   }
 
-  // Drift market prices
+  // Drift market prices — volatility per industry, with shock events
   (Object.keys(next.industries) as IndustryId[]).forEach((id) => {
     const ind = next.industries[id];
-    ind.trend += (Math.random() - 0.5) * 0.05 * dtSec;
-    ind.trend = Math.max(-1, Math.min(1, ind.trend * 0.995));
-    ind.price = Math.max(10, ind.price * (1 + ind.trend * 0.002 * dtSec * 60));
-    if (Math.random() < dtSec * 0.5) {
+    const vol = INDUSTRY_VOLATILITY[id] ?? 1;
+    // Trend random walk
+    ind.trend += (Math.random() - 0.5) * 0.25 * vol * dtSec;
+    // Occasional shock (pump/dump)
+    if (Math.random() < dtSec * 0.04 * vol) {
+      ind.trend += (Math.random() - 0.5) * 1.2 * vol;
+    }
+    ind.trend = Math.max(-1, Math.min(1, ind.trend * 0.985));
+    // Price moves with trend + jitter
+    const drift = ind.trend * 0.015 * vol * dtSec * 60;
+    const noise = (Math.random() - 0.5) * 0.008 * vol;
+    ind.price = Math.max(1, ind.price * (1 + drift + noise));
+    if (Math.random() < dtSec * 0.8) {
       ind.history = [...ind.history.slice(-19), ind.price];
     }
   });
