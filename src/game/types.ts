@@ -117,4 +117,8 @@ export interface GameState {
   // Wheel
   lastWheelSpin: number; // timestamp
   activeBoosts: ActiveBoost[];
+  // Stock market
+  holdings: Record<IndustryId, StockHolding>;
+  totalInvested: number;
+  totalRealized: number;
 }
