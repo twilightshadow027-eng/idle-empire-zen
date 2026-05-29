@@ -261,9 +261,9 @@ export function getWheelResult() {
   return WHEEL_SEGMENTS[WHEEL_SEGMENTS.length - 1];
 }
 
-export function spinWheel(state: GameState, empNames: string[]): GameState {
+export function spinWheel(state: GameState, empNames: string[], forcedResult?: typeof WHEEL_SEGMENTS[number]): GameState {
   if (!canSpin(state)) return state;
-  const result = getWheelResult();
+  const result = forcedResult ?? getWheelResult();
   const now = Date.now();
   let next: GameState = { ...state, lastWheelSpin: now };
 
