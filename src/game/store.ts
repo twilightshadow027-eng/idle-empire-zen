@@ -138,7 +138,7 @@ export const useGame = create<Store>((set, get) => ({
   },
 
   claimDailyReward: () => set({ state: claimDailyReward(get().state) }),
-  spinWheelAction: () => set({ state: spinWheel(get().state, EMPLOYEE_NAMES) }),
+  spinWheelAction: (forced) => set({ state: spinWheel(get().state, EMPLOYEE_NAMES, forced as any) }),
   buyStockAction: (id, shares) => set({ state: buyStock(get().state, id, shares) }),
   sellStockAction: (id, shares) => set({ state: sellStock(get().state, id, shares) }),
 
