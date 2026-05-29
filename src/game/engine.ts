@@ -33,6 +33,9 @@ export function createInitialState(): GameState {
     claimStreak: 0,
     lastWheelSpin: 0,
     activeBoosts: [],
+    holdings: {} as Record<IndustryId, StockHolding>,
+    totalInvested: 0,
+    totalRealized: 0,
   };
 }
 
