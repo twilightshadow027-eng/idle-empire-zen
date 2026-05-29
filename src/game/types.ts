@@ -20,7 +20,9 @@ export interface BusinessState {
   hasManager: boolean;
 }
 
-export type IndustryId = 'food' | 'tech' | 'energy' | 'transport' | 'media' | 'military';
+export type IndustryId =
+  | 'food' | 'tech' | 'energy' | 'transport' | 'media' | 'military'
+  | 'crypto' | 'gold' | 'oil' | 'realestate' | 'pharma' | 'finance' | 'ai' | 'gaming' | 'space' | 'luxury';
 
 export interface IndustryState {
   id: IndustryId;
