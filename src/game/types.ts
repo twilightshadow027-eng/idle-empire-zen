@@ -87,6 +87,11 @@ export interface WheelSegment {
   value: number;  // cash amount, multiplier, or minutes
 }
 
+export interface StockHolding {
+  shares: number;
+  avgCost: number;
+}
+
 export interface ActiveBoost {
   id: string;
   type: 'speed' | 'income';
@@ -112,4 +117,8 @@ export interface GameState {
   // Wheel
   lastWheelSpin: number; // timestamp
   activeBoosts: ActiveBoost[];
+  // Stock market
+  holdings: Record<IndustryId, StockHolding>;
+  totalInvested: number;
+  totalRealized: number;
 }

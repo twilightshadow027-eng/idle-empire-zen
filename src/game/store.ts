@@ -1,6 +1,6 @@
 import { create } from 'zustand';
-import { BusinessId, GameState } from './types';
-import { buyOrUpgrade, buyUpgrade, calculateOfflineEarnings, collectBusiness, claimDailyReward, loadState, saveState, tick, spinWheel } from './engine';
+import { BusinessId, GameState, IndustryId } from './types';
+import { buyOrUpgrade, buyStock, buyUpgrade, calculateOfflineEarnings, collectBusiness, claimDailyReward, loadState, saveState, sellStock, tick, spinWheel } from './engine';
 import { EMPLOYEE_NAMES } from './config';
 
 interface FloatingNumber { id: number; amount: number; x: number; y: number; }
@@ -20,6 +20,8 @@ interface Store {
   prestige: () => void;
   claimDailyReward: () => void;
   spinWheelAction: () => void;
+  buyStockAction: (id: IndustryId, shares: number) => void;
+  sellStockAction: (id: IndustryId, shares: number) => void;
   clearOffline: () => void;
   reset: () => void;
 }
@@ -137,6 +139,8 @@ export const useGame = create<Store>((set, get) => ({
 
   claimDailyReward: () => set({ state: claimDailyReward(get().state) }),
   spinWheelAction: () => set({ state: spinWheel(get().state, EMPLOYEE_NAMES) }),
+  buyStockAction: (id, shares) => set({ state: buyStock(get().state, id, shares) }),
+  sellStockAction: (id, shares) => set({ state: sellStock(get().state, id, shares) }),
 
   clearOffline: () => set({ offlineEarned: 0 }),
   reset: () => {

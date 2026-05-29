@@ -1,5 +1,5 @@
 import { BUSINESSES, COST_GROWTH, UPGRADES, INDUSTRY_NAMES, DAILY_REWARDS, WHEEL_SEGMENTS, WHEEL_COOLDOWN_MS } from './config';
-import { BusinessId, BusinessState, GameState, IndustryId, IndustryState } from './types';
+import { BusinessId, BusinessState, GameState, IndustryId, IndustryState, StockHolding } from './types';
 
 export const STORAGE_KEY = 'idle-empire-save-v1';
 
@@ -33,6 +33,9 @@ export function createInitialState(): GameState {
     claimStreak: 0,
     lastWheelSpin: 0,
     activeBoosts: [],
+    holdings: {} as Record<IndustryId, StockHolding>,
+    totalInvested: 0,
+    totalRealized: 0,
   };
 }
 
@@ -50,6 +53,9 @@ export function loadState(): GameState {
       clan: { ...fresh.clan, ...parsed.clan },
       activeBoosts: parsed.activeBoosts ?? [],
       lastWheelSpin: parsed.lastWheelSpin ?? 0,
+      holdings: { ...fresh.holdings, ...(parsed.holdings ?? {}) },
+      totalInvested: parsed.totalInvested ?? 0,
+      totalRealized: parsed.totalRealized ?? 0,
     };
   } catch {
     return createInitialState();
@@ -317,3 +323,39 @@ export function spinWheel(state: GameState, empNames: string[]): GameState {
 }
 
 
+
+export function buyStock(state: GameState, id: IndustryId, shares: number): GameState {
+  if (shares <= 0) return state;
+  const ind = state.industries[id];
+  const cost = ind.price * shares;
+  if (state.money < cost) return state;
+  const existing = state.holdings[id] ?? { shares: 0, avgCost: 0 };
+  const newShares = existing.shares + shares;
+  const newAvg = (existing.avgCost * existing.shares + cost) / newShares;
+  return {
+    ...state,
+    money: state.money - cost,
+    totalInvested: state.totalInvested + cost,
+    holdings: { ...state.holdings, [id]: { shares: newShares, avgCost: newAvg } },
+  };
+}
+
+export function sellStock(state: GameState, id: IndustryId, shares: number): GameState {
+  if (shares <= 0) return state;
+  const ind = state.industries[id];
+  const existing = state.holdings[id];
+  if (!existing || existing.shares < shares) return state;
+  const proceeds = ind.price * shares;
+  const remaining = existing.shares - shares;
+  const realized = proceeds - existing.avgCost * shares;
+  return {
+    ...state,
+    money: state.money + proceeds,
+    totalEarned: state.totalEarned + Math.max(0, realized),
+    totalRealized: state.totalRealized + realized,
+    holdings: {
+      ...state.holdings,
+      [id]: { shares: remaining, avgCost: remaining === 0 ? 0 : existing.avgCost },
+    },
+  };
+}
