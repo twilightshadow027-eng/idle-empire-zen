@@ -11,8 +11,16 @@ export function MarketPanel() {
   const holdings = useGame((s) => s.state.holdings);
   const money = useGame((s) => s.state.money);
   const totalRealized = useGame((s) => s.state.totalRealized);
+  const totalDividends = useGame((s) => s.state.totalDividends);
   const buyStock = useGame((s) => s.buyStockAction);
   const sellStock = useGame((s) => s.sellStockAction);
+
+  // Projected dividend income per minute from current holdings
+  const divPerMin = Object.entries(holdings).reduce((sum, [id, h]) => {
+    if (!h || h.shares === 0) return sum;
+    const rate = INDUSTRY_DIVIDEND[id as IndustryId] ?? 0;
+    return sum + h.shares * industries[id as IndustryId].price * (rate / 100);
+  }, 0);
 
   // Total portfolio value
   const portfolioValue = Object.entries(holdings).reduce((sum, [id, h]) => {
