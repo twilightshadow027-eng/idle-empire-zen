@@ -59,6 +59,7 @@ export function loadState(): GameState {
       holdings: { ...fresh.holdings, ...(parsed.holdings ?? {}) },
       totalInvested: parsed.totalInvested ?? 0,
       totalRealized: parsed.totalRealized ?? 0,
+      totalDividends: parsed.totalDividends ?? 0,
     };
   } catch {
     return createInitialState();
