@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
+import { Area, AreaChart, ResponsiveContainer, YAxis } from 'recharts';
 import { useGame } from '@/game/store';
 import { formatMoney } from '@/game/engine';
-import { INDUSTRY_DIVIDEND } from '@/game/config';
-import { IndustryId } from '@/game/types';
-import { TrendingDown, TrendingUp, Wallet, Briefcase, Coins } from 'lucide-react';
+import { INDUSTRY_DIVIDEND, INDUSTRY_CATEGORY, CATEGORY_ORDER, CATEGORY_LABELS } from '@/game/config';
+import type { IndustryCategory, IndustryId, IndustryState, StockHolding } from '@/game/types';
+import { TrendingDown, TrendingUp, Wallet, Briefcase, Coins, ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export function MarketPanel() {
@@ -15,14 +16,14 @@ export function MarketPanel() {
   const buyStock = useGame((s) => s.buyStockAction);
   const sellStock = useGame((s) => s.sellStockAction);
 
-  // Projected dividend income per minute from current holdings
+  const [collapsed, setCollapsed] = useState<Record<IndustryCategory, boolean>>({} as any);
+
   const divPerMin = Object.entries(holdings).reduce((sum, [id, h]) => {
     if (!h || h.shares === 0) return sum;
     const rate = INDUSTRY_DIVIDEND[id as IndustryId] ?? 0;
     return sum + h.shares * industries[id as IndustryId].price * (rate / 100);
   }, 0);
 
-  // Total portfolio value
   const portfolioValue = Object.entries(holdings).reduce((sum, [id, h]) => {
     if (!h || h.shares === 0) return sum;
     return sum + h.shares * industries[id as IndustryId].price;
@@ -30,9 +31,20 @@ export function MarketPanel() {
   const portfolioCost = Object.values(holdings).reduce((sum, h) => sum + (h?.shares ?? 0) * (h?.avgCost ?? 0), 0);
   const unrealized = portfolioValue - portfolioCost;
 
+  // Group industries by category in canonical order
+  const grouped = useMemo(() => {
+    const out: Record<IndustryCategory, IndustryState[]> = {} as any;
+    CATEGORY_ORDER.forEach((c) => (out[c] = []));
+    Object.values(industries).forEach((ind) => {
+      const cat = INDUSTRY_CATEGORY[ind.id];
+      if (!out[cat]) out[cat] = [];
+      out[cat].push(ind);
+    });
+    return out;
+  }, [industries]);
+
   return (
     <div className="space-y-3">
-      {/* Portfolio summary */}
       <div className="grid grid-cols-3 gap-2">
         <SummaryCard icon={<Wallet className="h-3.5 w-3.5" />} label="Cash" value={formatMoney(money)} tone="primary" />
         <SummaryCard icon={<Briefcase className="h-3.5 w-3.5" />} label="Portfolio" value={formatMoney(portfolioValue)} tone="accent" />
@@ -47,7 +59,9 @@ export function MarketPanel() {
         <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-0.5 text-[11px] text-muted-foreground">
           {totalRealized !== 0 && (
             <span>
-              Realized: <span className={totalRealized >= 0 ? 'text-success' : 'text-destructive'}>{totalRealized >= 0 ? '+' : ''}{formatMoney(totalRealized)}</span>
+              Realized: <span className={totalRealized >= 0 ? 'text-success' : 'text-destructive'}>
+                {totalRealized >= 0 ? '+' : ''}{formatMoney(totalRealized)}
+              </span>
             </span>
           )}
           {totalDividends > 0 && (
@@ -64,18 +78,48 @@ export function MarketPanel() {
         </div>
       )}
 
-      <div className="grid gap-2 sm:grid-cols-2">
-        {Object.values(industries).map((i) => (
-          <StockCard
-            key={i.id}
-            industry={i}
-            holding={holdings[i.id]}
-            cash={money}
-            onBuy={(shares) => buyStock(i.id, shares)}
-            onSell={(shares) => sellStock(i.id, shares)}
-          />
-        ))}
-      </div>
+      {CATEGORY_ORDER.map((cat) => {
+        const list = grouped[cat];
+        if (!list || list.length === 0) return null;
+        const isCollapsed = collapsed[cat];
+        // Aggregate ownership for category
+        const ownedCount = list.filter((i) => (holdings[i.id]?.shares ?? 0) > 0).length;
+        return (
+          <div key={cat} className="space-y-2">
+            <button
+              onClick={() => setCollapsed((c) => ({ ...c, [cat]: !c[cat] }))}
+              className="flex w-full items-center justify-between rounded-lg border border-border/40 bg-card/40 px-3 py-1.5 text-left transition hover:bg-card/70"
+            >
+              <div className="flex items-center gap-2">
+                <ChevronDown className={cn('h-3.5 w-3.5 text-muted-foreground transition-transform', isCollapsed && '-rotate-90')} />
+                <span className="font-display text-xs font-bold uppercase tracking-wider text-foreground">
+                  {CATEGORY_LABELS[cat]}
+                </span>
+                <span className="text-[10px] text-muted-foreground">{list.length} symbols</span>
+              </div>
+              {ownedCount > 0 && (
+                <span className="rounded-full bg-accent/15 px-2 py-0.5 text-[10px] font-bold text-accent">
+                  {ownedCount} held
+                </span>
+              )}
+            </button>
+            {!isCollapsed && (
+              <div className="grid gap-2 sm:grid-cols-2">
+                {list.map((i) => (
+                  <StockCard
+                    key={i.id}
+                    industry={i}
+                    holding={holdings[i.id]}
+                    cash={money}
+                    onBuy={(shares) => buyStock(i.id, shares)}
+                    onSell={(shares) => sellStock(i.id, shares)}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -104,51 +148,75 @@ function StockCard({
   onBuy,
   onSell,
 }: {
-  industry: ReturnType<typeof useGame> extends never ? never : import('@/game/types').IndustryState;
-  holding?: import('@/game/types').StockHolding;
+  industry: IndustryState;
+  holding?: StockHolding;
   cash: number;
   onBuy: (shares: number) => void;
   onSell: (shares: number) => void;
 }) {
   const [qty, setQty] = useState(1);
   const up = i.trend >= 0;
-  const max = Math.max(...i.history);
-  const min = Math.min(...i.history);
-  const range = Math.max(1, max - min);
   const shares = holding?.shares ?? 0;
   const avg = holding?.avgCost ?? 0;
   const pl = shares * (i.price - avg);
   const cost = i.price * qty;
   const canBuy = cash >= cost;
   const canSell = shares >= qty;
-
   const divRate = INDUSTRY_DIVIDEND[i.id] ?? 0;
   const divPerMin = shares * i.price * (divRate / 100);
 
+  // Chart data
+  const chartData = useMemo(() => i.history.map((p, idx) => ({ idx, price: p })), [i.history]);
+  const min = Math.min(...i.history);
+  const max = Math.max(...i.history);
+  const gradId = `grad-${i.id}`;
+  const stroke = up ? 'hsl(var(--success))' : 'hsl(var(--destructive))';
+
   return (
     <div className="rounded-xl border border-border/60 bg-card-gradient p-3">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-1.5">
-          <div className="font-display font-semibold">{i.name}</div>
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex min-w-0 items-center gap-1.5">
+          <div className="truncate font-display text-sm font-semibold">{i.name}</div>
           {divRate > 0 && (
-            <span className="inline-flex items-center gap-0.5 rounded-full border border-accent/30 bg-accent/10 px-1.5 py-0 text-[9px] font-bold uppercase tracking-wider text-accent">
-              <Coins className="h-2.5 w-2.5" />{divRate.toFixed(1)}%/m
+            <span className="inline-flex shrink-0 items-center gap-0.5 rounded-full border border-accent/30 bg-accent/10 px-1.5 py-0 text-[9px] font-bold uppercase tracking-wider text-accent">
+              <Coins className="h-2.5 w-2.5" />{divRate.toFixed(1)}%
             </span>
           )}
         </div>
-        <div className={`flex items-center gap-0.5 text-xs font-bold ${up ? 'text-success' : 'text-destructive'}`}>
+        <div className={cn('flex shrink-0 items-center gap-0.5 text-xs font-bold', up ? 'text-success' : 'text-destructive')}>
           {up ? <TrendingUp className="h-3.5 w-3.5" /> : <TrendingDown className="h-3.5 w-3.5" />}
           {(i.trend * 100).toFixed(1)}%
         </div>
       </div>
-      <div className="mt-1 font-mono text-lg font-bold">${i.price.toFixed(2)}</div>
-      <div className="mt-1 flex h-8 items-end gap-0.5">
-        {i.history.map((p, idx) => {
-          const h = ((p - min) / range) * 100;
-          return (
-            <div key={idx} className={`flex-1 rounded-sm ${up ? 'bg-success/60' : 'bg-destructive/60'}`} style={{ height: `${Math.max(6, h)}%` }} />
-          );
-        })}
+
+      <div className="mt-0.5 flex items-baseline justify-between gap-2">
+        <div className="font-mono text-lg font-bold">${i.price.toFixed(2)}</div>
+        <div className="font-mono text-[10px] text-muted-foreground">
+          L ${min.toFixed(2)} · H ${max.toFixed(2)}
+        </div>
+      </div>
+
+      <div className="mt-1 h-14 w-full">
+        <ResponsiveContainer width="100%" height="100%">
+          <AreaChart data={chartData} margin={{ top: 2, right: 0, left: 0, bottom: 0 }}>
+            <defs>
+              <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor={stroke} stopOpacity={0.45} />
+                <stop offset="100%" stopColor={stroke} stopOpacity={0} />
+              </linearGradient>
+            </defs>
+            <YAxis hide domain={['dataMin', 'dataMax']} />
+            <Area
+              type="monotone"
+              dataKey="price"
+              stroke={stroke}
+              strokeWidth={1.75}
+              fill={`url(#${gradId})`}
+              isAnimationActive={false}
+              dot={false}
+            />
+          </AreaChart>
+        </ResponsiveContainer>
       </div>
 
       {shares > 0 && (
@@ -194,7 +262,7 @@ function StockCard({
           className="flex flex-1 flex-col items-center justify-center rounded-lg bg-success/80 px-2 py-1 text-success-foreground transition hover:bg-success disabled:cursor-not-allowed disabled:opacity-40"
         >
           <span className="text-xs font-bold leading-tight">Buy ×{qty}</span>
-          <span className="font-mono text-[10px] leading-tight opacity-80">${formatMoney(cost).replace('$', '')}</span>
+          <span className="font-mono text-[10px] leading-tight opacity-80">{formatMoney(cost)}</span>
         </button>
         <button
           onClick={() => onSell(qty)}
@@ -202,7 +270,7 @@ function StockCard({
           className="flex flex-1 flex-col items-center justify-center rounded-lg bg-destructive/80 px-2 py-1 text-destructive-foreground transition hover:bg-destructive disabled:cursor-not-allowed disabled:opacity-40"
         >
           <span className="text-xs font-bold leading-tight">Sell ×{qty}</span>
-          <span className="font-mono text-[10px] leading-tight opacity-80">${formatMoney(i.price * qty).replace('$', '')}</span>
+          <span className="font-mono text-[10px] leading-tight opacity-80">{formatMoney(i.price * qty)}</span>
         </button>
       </div>
       {shares > 0 && (

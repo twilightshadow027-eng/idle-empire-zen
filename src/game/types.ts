@@ -21,8 +21,24 @@ export interface BusinessState {
 }
 
 export type IndustryId =
-  | 'food' | 'tech' | 'energy' | 'transport' | 'media' | 'military'
-  | 'crypto' | 'gold' | 'oil' | 'realestate' | 'pharma' | 'finance' | 'ai' | 'gaming' | 'space' | 'luxury';
+  // Energy
+  | 'oil' | 'gas' | 'coal' | 'solar' | 'nuclear' | 'energy'
+  // Metals & Materials
+  | 'gold' | 'silver' | 'copper' | 'platinum' | 'lithium'
+  // Crypto
+  | 'crypto' | 'eth' | 'doge' | 'sol'
+  // Tech & AI
+  | 'tech' | 'ai' | 'semis' | 'cloud' | 'gaming'
+  // Finance
+  | 'finance' | 'banks' | 'insurance'
+  // Consumer
+  | 'food' | 'luxury' | 'media' | 'retail'
+  // Industrial
+  | 'transport' | 'logistics' | 'military' | 'space'
+  // Real Estate & Health
+  | 'realestate' | 'pharma' | 'biotech';
+
+export type IndustryCategory = 'Energy' | 'Metals' | 'Crypto' | 'Tech' | 'Finance' | 'Consumer' | 'Industrial' | 'RealEstate';
 
 export interface IndustryState {
   id: IndustryId;
