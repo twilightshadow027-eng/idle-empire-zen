@@ -1,4 +1,4 @@
-import { BusinessDef, IndustryId, UpgradeDef } from './types';
+import { BusinessDef, IndustryCategory, IndustryId, UpgradeDef } from './types';
 
 export const COST_GROWTH = 1.15;
 export const TICK_MS = 100;
