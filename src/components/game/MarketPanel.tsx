@@ -161,6 +161,14 @@ function StockCard({
           </span>
         </div>
       )}
+      {shares > 0 && divPerMin > 0 && (
+        <div className="mt-1 flex items-center justify-between rounded-lg border border-accent/20 bg-accent/5 px-2 py-1 text-[11px]">
+          <span className="inline-flex items-center gap-1 text-muted-foreground">
+            <Coins className="h-3 w-3 text-accent" /> Dividend
+          </span>
+          <span className="font-mono font-bold text-accent">+{formatMoney(divPerMin)}/min</span>
+        </div>
+      )}
 
       <div className="mt-2 flex items-center gap-1.5">
         <div className="flex items-center rounded-lg border border-border/60 bg-background/40">
