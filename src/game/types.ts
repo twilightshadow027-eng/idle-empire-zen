@@ -123,4 +123,5 @@ export interface GameState {
   holdings: Record<IndustryId, StockHolding>;
   totalInvested: number;
   totalRealized: number;
+  totalDividends: number;
 }
