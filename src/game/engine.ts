@@ -162,6 +162,22 @@ export function tick(state: GameState, dtSec: number): { state: GameState; earne
     }
   });
 
+  // Dividends — accrue cash each tick from stock holdings.
+  let dividendTotal = 0;
+  (Object.keys(next.holdings) as IndustryId[]).forEach((id) => {
+    const h = next.holdings[id];
+    if (!h || h.shares <= 0) return;
+    const ratePerMin = INDUSTRY_DIVIDEND[id] ?? 0;
+    if (ratePerMin <= 0) return;
+    const payout = h.shares * next.industries[id].price * (ratePerMin / 100) * (dtSec / 60);
+    dividendTotal += payout;
+  });
+  if (dividendTotal > 0) {
+    next.money += dividendTotal;
+    next.totalEarned += dividendTotal;
+    next.totalDividends += dividendTotal;
+  }
+
   return { state: next, earned };
 }
 
