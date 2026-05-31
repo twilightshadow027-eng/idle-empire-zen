@@ -191,16 +191,18 @@ function StockCard({
         <button
           onClick={() => onBuy(qty)}
           disabled={!canBuy}
-          className="flex-1 rounded-lg bg-success/80 px-2 py-1.5 text-xs font-bold text-success-foreground transition hover:bg-success disabled:cursor-not-allowed disabled:opacity-40"
+          className="flex flex-1 flex-col items-center justify-center rounded-lg bg-success/80 px-2 py-1 text-success-foreground transition hover:bg-success disabled:cursor-not-allowed disabled:opacity-40"
         >
-          Buy ${cost.toFixed(0)}
+          <span className="text-xs font-bold leading-tight">Buy ×{qty}</span>
+          <span className="font-mono text-[10px] leading-tight opacity-80">${formatMoney(cost).replace('$', '')}</span>
         </button>
         <button
           onClick={() => onSell(qty)}
           disabled={!canSell}
-          className="flex-1 rounded-lg bg-destructive/80 px-2 py-1.5 text-xs font-bold text-destructive-foreground transition hover:bg-destructive disabled:cursor-not-allowed disabled:opacity-40"
+          className="flex flex-1 flex-col items-center justify-center rounded-lg bg-destructive/80 px-2 py-1 text-destructive-foreground transition hover:bg-destructive disabled:cursor-not-allowed disabled:opacity-40"
         >
-          Sell
+          <span className="text-xs font-bold leading-tight">Sell ×{qty}</span>
+          <span className="font-mono text-[10px] leading-tight opacity-80">${formatMoney(i.price * qty).replace('$', '')}</span>
         </button>
       </div>
       {shares > 0 && (
