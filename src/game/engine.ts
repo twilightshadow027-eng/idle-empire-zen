@@ -142,22 +142,22 @@ export function tick(state: GameState, dtSec: number): { state: GameState; earne
     next.activeBoosts = next.activeBoosts.filter((b) => b.expiresAt > now);
   }
 
-  // Drift market prices — volatility per industry, with shock events
+  // Drift market prices — volatility per industry, with occasional shocks
   (Object.keys(next.industries) as IndustryId[]).forEach((id) => {
     const ind = next.industries[id];
     const vol = INDUSTRY_VOLATILITY[id] ?? 1;
-    // Trend random walk
-    ind.trend += (Math.random() - 0.5) * 0.25 * vol * dtSec;
-    // Occasional shock (pump/dump)
-    if (Math.random() < dtSec * 0.04 * vol) {
-      ind.trend += (Math.random() - 0.5) * 1.2 * vol;
+    // Trend random walk (slower)
+    ind.trend += (Math.random() - 0.5) * 0.06 * vol * dtSec;
+    // Rare shock (pump/dump)
+    if (Math.random() < dtSec * 0.008 * vol) {
+      ind.trend += (Math.random() - 0.5) * 0.5 * vol;
     }
-    ind.trend = Math.max(-1, Math.min(1, ind.trend * 0.985));
-    // Price moves with trend + jitter
-    const drift = ind.trend * 0.015 * vol * dtSec * 60;
-    const noise = (Math.random() - 0.5) * 0.008 * vol;
+    ind.trend = Math.max(-1, Math.min(1, ind.trend * 0.99));
+    // Price moves with trend + jitter (much gentler)
+    const drift = ind.trend * 0.003 * vol * dtSec * 60;
+    const noise = (Math.random() - 0.5) * 0.0015 * vol;
     ind.price = Math.max(1, ind.price * (1 + drift + noise));
-    if (Math.random() < dtSec * 0.8) {
+    if (Math.random() < dtSec * 0.25) {
       ind.history = [...ind.history.slice(-19), ind.price];
     }
   });
