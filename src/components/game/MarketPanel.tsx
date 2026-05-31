@@ -43,9 +43,24 @@ export function MarketPanel() {
           tone={unrealized >= 0 ? 'success' : 'destructive'}
         />
       </div>
-      {totalRealized !== 0 && (
-        <div className="text-center text-[11px] text-muted-foreground">
-          Realized lifetime: <span className={totalRealized >= 0 ? 'text-success' : 'text-destructive'}>{totalRealized >= 0 ? '+' : ''}{formatMoney(totalRealized)}</span>
+      {(totalRealized !== 0 || totalDividends > 0 || divPerMin > 0) && (
+        <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-0.5 text-[11px] text-muted-foreground">
+          {totalRealized !== 0 && (
+            <span>
+              Realized: <span className={totalRealized >= 0 ? 'text-success' : 'text-destructive'}>{totalRealized >= 0 ? '+' : ''}{formatMoney(totalRealized)}</span>
+            </span>
+          )}
+          {totalDividends > 0 && (
+            <span className="inline-flex items-center gap-1">
+              <Coins className="h-3 w-3 text-accent" />
+              Dividends: <span className="text-accent">{formatMoney(totalDividends)}</span>
+            </span>
+          )}
+          {divPerMin > 0 && (
+            <span>
+              Yield: <span className="text-accent">{formatMoney(divPerMin)}/min</span>
+            </span>
+          )}
         </div>
       )}
 
