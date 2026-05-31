@@ -38,6 +38,7 @@ export function createInitialState(): GameState {
     holdings: {} as Record<IndustryId, StockHolding>,
     totalInvested: 0,
     totalRealized: 0,
+    totalDividends: 0,
   };
 }
 
