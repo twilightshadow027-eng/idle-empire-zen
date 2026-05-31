@@ -122,10 +122,20 @@ function StockCard({
   const canBuy = cash >= cost;
   const canSell = shares >= qty;
 
+  const divRate = INDUSTRY_DIVIDEND[i.id] ?? 0;
+  const divPerMin = shares * i.price * (divRate / 100);
+
   return (
     <div className="rounded-xl border border-border/60 bg-card-gradient p-3">
       <div className="flex items-center justify-between">
-        <div className="font-display font-semibold">{i.name}</div>
+        <div className="flex items-center gap-1.5">
+          <div className="font-display font-semibold">{i.name}</div>
+          {divRate > 0 && (
+            <span className="inline-flex items-center gap-0.5 rounded-full border border-accent/30 bg-accent/10 px-1.5 py-0 text-[9px] font-bold uppercase tracking-wider text-accent">
+              <Coins className="h-2.5 w-2.5" />{divRate.toFixed(1)}%/m
+            </span>
+          )}
+        </div>
         <div className={`flex items-center gap-0.5 text-xs font-bold ${up ? 'text-success' : 'text-destructive'}`}>
           {up ? <TrendingUp className="h-3.5 w-3.5" /> : <TrendingDown className="h-3.5 w-3.5" />}
           {(i.trend * 100).toFixed(1)}%
