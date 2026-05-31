@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { useGame } from '@/game/store';
 import { formatMoney } from '@/game/engine';
+import { INDUSTRY_DIVIDEND } from '@/game/config';
 import { IndustryId } from '@/game/types';
-import { TrendingDown, TrendingUp, Wallet, Briefcase } from 'lucide-react';
+import { TrendingDown, TrendingUp, Wallet, Briefcase, Coins } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export function MarketPanel() {
