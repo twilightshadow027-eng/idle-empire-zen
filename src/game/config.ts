@@ -39,6 +39,14 @@ export const INDUSTRY_VOLATILITY: Record<IndustryId, number> = {
   finance: 1.0, ai: 2.6, gaming: 1.8, space: 2.2, luxury: 1.3,
 };
 
+// Dividend yield expressed as % of share price paid per IN-GAME MINUTE.
+// Stable/value sectors pay more; growth/crypto pay little to nothing.
+export const INDUSTRY_DIVIDEND: Record<IndustryId, number> = {
+  food: 0.8, tech: 0.2, energy: 1.0, transport: 0.7, media: 0.5, military: 0.6,
+  crypto: 0, gold: 0.4, oil: 1.2, realestate: 1.6, pharma: 0.9,
+  finance: 1.4, ai: 0.1, gaming: 0.3, space: 0, luxury: 0.6,
+};
+
 export const EMPLOYEE_NAMES = [
   'Aria Chen', 'Marcus Vale', 'Kira Okafor', 'Dmitri Volkov', 'Sofia Reyes',
   'Jin Park', 'Nora Hassan', 'Liam Brooks', 'Yuki Tanaka', 'Eli Cohen',

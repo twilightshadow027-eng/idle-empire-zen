@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { useGame } from '@/game/store';
 import { formatMoney } from '@/game/engine';
+import { INDUSTRY_DIVIDEND } from '@/game/config';
 import { IndustryId } from '@/game/types';
-import { TrendingDown, TrendingUp, Wallet, Briefcase } from 'lucide-react';
+import { TrendingDown, TrendingUp, Wallet, Briefcase, Coins } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export function MarketPanel() {
@@ -10,8 +11,16 @@ export function MarketPanel() {
   const holdings = useGame((s) => s.state.holdings);
   const money = useGame((s) => s.state.money);
   const totalRealized = useGame((s) => s.state.totalRealized);
+  const totalDividends = useGame((s) => s.state.totalDividends);
   const buyStock = useGame((s) => s.buyStockAction);
   const sellStock = useGame((s) => s.sellStockAction);
+
+  // Projected dividend income per minute from current holdings
+  const divPerMin = Object.entries(holdings).reduce((sum, [id, h]) => {
+    if (!h || h.shares === 0) return sum;
+    const rate = INDUSTRY_DIVIDEND[id as IndustryId] ?? 0;
+    return sum + h.shares * industries[id as IndustryId].price * (rate / 100);
+  }, 0);
 
   // Total portfolio value
   const portfolioValue = Object.entries(holdings).reduce((sum, [id, h]) => {
@@ -34,9 +43,24 @@ export function MarketPanel() {
           tone={unrealized >= 0 ? 'success' : 'destructive'}
         />
       </div>
-      {totalRealized !== 0 && (
-        <div className="text-center text-[11px] text-muted-foreground">
-          Realized lifetime: <span className={totalRealized >= 0 ? 'text-success' : 'text-destructive'}>{totalRealized >= 0 ? '+' : ''}{formatMoney(totalRealized)}</span>
+      {(totalRealized !== 0 || totalDividends > 0 || divPerMin > 0) && (
+        <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-0.5 text-[11px] text-muted-foreground">
+          {totalRealized !== 0 && (
+            <span>
+              Realized: <span className={totalRealized >= 0 ? 'text-success' : 'text-destructive'}>{totalRealized >= 0 ? '+' : ''}{formatMoney(totalRealized)}</span>
+            </span>
+          )}
+          {totalDividends > 0 && (
+            <span className="inline-flex items-center gap-1">
+              <Coins className="h-3 w-3 text-accent" />
+              Dividends: <span className="text-accent">{formatMoney(totalDividends)}</span>
+            </span>
+          )}
+          {divPerMin > 0 && (
+            <span>
+              Yield: <span className="text-accent">{formatMoney(divPerMin)}/min</span>
+            </span>
+          )}
         </div>
       )}
 
@@ -98,10 +122,20 @@ function StockCard({
   const canBuy = cash >= cost;
   const canSell = shares >= qty;
 
+  const divRate = INDUSTRY_DIVIDEND[i.id] ?? 0;
+  const divPerMin = shares * i.price * (divRate / 100);
+
   return (
     <div className="rounded-xl border border-border/60 bg-card-gradient p-3">
       <div className="flex items-center justify-between">
-        <div className="font-display font-semibold">{i.name}</div>
+        <div className="flex items-center gap-1.5">
+          <div className="font-display font-semibold">{i.name}</div>
+          {divRate > 0 && (
+            <span className="inline-flex items-center gap-0.5 rounded-full border border-accent/30 bg-accent/10 px-1.5 py-0 text-[9px] font-bold uppercase tracking-wider text-accent">
+              <Coins className="h-2.5 w-2.5" />{divRate.toFixed(1)}%/m
+            </span>
+          )}
+        </div>
         <div className={`flex items-center gap-0.5 text-xs font-bold ${up ? 'text-success' : 'text-destructive'}`}>
           {up ? <TrendingUp className="h-3.5 w-3.5" /> : <TrendingDown className="h-3.5 w-3.5" />}
           {(i.trend * 100).toFixed(1)}%
@@ -125,6 +159,14 @@ function StockCard({
           <span className={cn('font-mono font-bold', pl >= 0 ? 'text-success' : 'text-destructive')}>
             {pl >= 0 ? '+' : ''}{formatMoney(pl)}
           </span>
+        </div>
+      )}
+      {shares > 0 && divPerMin > 0 && (
+        <div className="mt-1 flex items-center justify-between rounded-lg border border-accent/20 bg-accent/5 px-2 py-1 text-[11px]">
+          <span className="inline-flex items-center gap-1 text-muted-foreground">
+            <Coins className="h-3 w-3 text-accent" /> Dividend
+          </span>
+          <span className="font-mono font-bold text-accent">+{formatMoney(divPerMin)}/min</span>
         </div>
       )}
 

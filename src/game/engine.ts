@@ -1,4 +1,4 @@
-import { BUSINESSES, COST_GROWTH, UPGRADES, INDUSTRY_NAMES, INDUSTRY_VOLATILITY, DAILY_REWARDS, WHEEL_SEGMENTS, WHEEL_COOLDOWN_MS } from './config';
+import { BUSINESSES, COST_GROWTH, UPGRADES, INDUSTRY_NAMES, INDUSTRY_VOLATILITY, INDUSTRY_DIVIDEND, DAILY_REWARDS, WHEEL_SEGMENTS, WHEEL_COOLDOWN_MS } from './config';
 import { BusinessId, BusinessState, GameState, IndustryId, IndustryState, StockHolding } from './types';
 
 export const STORAGE_KEY = 'idle-empire-save-v1';
@@ -38,6 +38,7 @@ export function createInitialState(): GameState {
     holdings: {} as Record<IndustryId, StockHolding>,
     totalInvested: 0,
     totalRealized: 0,
+    totalDividends: 0,
   };
 }
 
@@ -58,6 +59,7 @@ export function loadState(): GameState {
       holdings: { ...fresh.holdings, ...(parsed.holdings ?? {}) },
       totalInvested: parsed.totalInvested ?? 0,
       totalRealized: parsed.totalRealized ?? 0,
+      totalDividends: parsed.totalDividends ?? 0,
     };
   } catch {
     return createInitialState();
@@ -159,6 +161,22 @@ export function tick(state: GameState, dtSec: number): { state: GameState; earne
       ind.history = [...ind.history.slice(-19), ind.price];
     }
   });
+
+  // Dividends — accrue cash each tick from stock holdings.
+  let dividendTotal = 0;
+  (Object.keys(next.holdings) as IndustryId[]).forEach((id) => {
+    const h = next.holdings[id];
+    if (!h || h.shares <= 0) return;
+    const ratePerMin = INDUSTRY_DIVIDEND[id] ?? 0;
+    if (ratePerMin <= 0) return;
+    const payout = h.shares * next.industries[id].price * (ratePerMin / 100) * (dtSec / 60);
+    dividendTotal += payout;
+  });
+  if (dividendTotal > 0) {
+    next.money += dividendTotal;
+    next.totalEarned += dividendTotal;
+    next.totalDividends += dividendTotal;
+  }
 
   return { state: next, earned };
 }
