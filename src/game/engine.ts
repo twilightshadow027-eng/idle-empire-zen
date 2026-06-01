@@ -306,6 +306,7 @@ export function computeQuestProgress(state: GameState, metric: import('./types')
     case 'prestige': return state.prestigePoints;
     case 'industries': return Object.values(state.holdings).filter((h) => (h?.shares ?? 0) > 0).length;
   }
+  return 0;
 }
 
 export function claimQuest(state: GameState, questId: string): GameState {
