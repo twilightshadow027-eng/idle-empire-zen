@@ -1,4 +1,4 @@
-import { BUSINESSES, COST_GROWTH, UPGRADES, INDUSTRY_NAMES, INDUSTRY_VOLATILITY, INDUSTRY_DIVIDEND, DAILY_REWARDS, WHEEL_SEGMENTS, WHEEL_COOLDOWN_MS } from './config';
+import { BUSINESSES, COST_GROWTH, UPGRADES, INDUSTRY_NAMES, INDUSTRY_VOLATILITY, INDUSTRY_DIVIDEND, DAILY_REWARDS, WHEEL_SEGMENTS, WHEEL_COOLDOWN_MS, MARKET_EVENT_POOL } from './config';
 import { BusinessId, BusinessState, GameState, IndustryId, IndustryState, StockHolding } from './types';
 
 export const STORAGE_KEY = 'idle-empire-save-v1';
@@ -15,8 +15,9 @@ export function createInitialState(): GameState {
     industries[id] = {
       id, name: INDUSTRY_NAMES[id],
       price: basePrice,
-      trend: (Math.random() - 0.5) * 0.6 * vol,
-      history: Array.from({ length: 20 }, () => basePrice * (0.85 + Math.random() * 0.3)),
+      basePrice,
+      trend: (Math.random() - 0.5) * 0.4,
+      history: Array.from({ length: 20 }, () => basePrice * (0.92 + Math.random() * 0.16)),
     };
   });
   return {
@@ -39,6 +40,8 @@ export function createInitialState(): GameState {
     totalInvested: 0,
     totalRealized: 0,
     totalDividends: 0,
+    events: [],
+    questsClaimed: {},
   };
 }
 
