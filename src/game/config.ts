@@ -1,4 +1,4 @@
-import { BusinessDef, IndustryCategory, IndustryId, UpgradeDef } from './types';
+import { BusinessDef, IndustryCategory, IndustryId, Quest, UpgradeDef } from './types';
 
 export const COST_GROWTH = 1.15;
 export const TICK_MS = 100;
@@ -116,3 +116,50 @@ export const WHEEL_SEGMENTS = [
   { type: 'prestige_dust' as const, label: 'Prestige Dust', icon: '✨', color: '#c084fc', chance: 0.08, value: 1 },
   { type: 'nothing' as const, label: 'Nothing', icon: '🌪️', color: '#94a3b8', chance: 0.08, value: 0 },
 ] as const;
+
+// Pool of dynamic market events. Each tick, one might be spawned, biasing an industry's trend.
+export const MARKET_EVENT_POOL: { label: string; icon: string; industryId: IndustryId; trendBoost: number; durationMs: number }[] = [
+  { label: 'AI breakthrough boosts chips',      icon: '🤖', industryId: 'ai',         trendBoost: 0.6,  durationMs: 60_000 },
+  { label: 'Semiconductor shortage',            icon: '🔌', industryId: 'semis',      trendBoost: 0.5,  durationMs: 60_000 },
+  { label: 'Crypto rally underway',             icon: '🚀', industryId: 'crypto',     trendBoost: 0.8,  durationMs: 45_000 },
+  { label: 'Ethereum upgrade hype',             icon: '💠', industryId: 'eth',        trendBoost: 0.6,  durationMs: 45_000 },
+  { label: 'Meme coin frenzy',                  icon: '🐕', industryId: 'doge',       trendBoost: 0.9,  durationMs: 30_000 },
+  { label: 'Oil cartel cuts supply',            icon: '🛢️', industryId: 'oil',        trendBoost: 0.5,  durationMs: 60_000 },
+  { label: 'Natural gas pipeline outage',       icon: '🔥', industryId: 'gas',        trendBoost: 0.4,  durationMs: 60_000 },
+  { label: 'Solar subsidies announced',         icon: '☀️', industryId: 'solar',      trendBoost: 0.5,  durationMs: 90_000 },
+  { label: 'Gold flight to safety',             icon: '🥇', industryId: 'gold',       trendBoost: 0.3,  durationMs: 90_000 },
+  { label: 'Lithium demand surge for EVs',      icon: '🔋', industryId: 'lithium',    trendBoost: 0.7,  durationMs: 60_000 },
+  { label: 'Bank stress test passed',           icon: '🏦', industryId: 'banks',      trendBoost: 0.3,  durationMs: 90_000 },
+  { label: 'Pharma trial success',              icon: '💊', industryId: 'pharma',     trendBoost: 0.5,  durationMs: 60_000 },
+  { label: 'Biotech FDA approval',              icon: '🧬', industryId: 'biotech',    trendBoost: 0.7,  durationMs: 60_000 },
+  { label: 'Space launch contract',             icon: '🛰️', industryId: 'space',      trendBoost: 0.6,  durationMs: 60_000 },
+  { label: 'Defense budget expansion',          icon: '🛡️', industryId: 'military',   trendBoost: 0.4,  durationMs: 90_000 },
+  { label: 'Luxury market correction',          icon: '💎', industryId: 'luxury',     trendBoost: -0.5, durationMs: 60_000 },
+  { label: 'Retail holiday slump',              icon: '🛍️', industryId: 'retail',     trendBoost: -0.4, durationMs: 60_000 },
+  { label: 'Crypto regulatory crackdown',       icon: '⚖️', industryId: 'crypto',     trendBoost: -0.7, durationMs: 45_000 },
+  { label: 'Tech earnings miss',                icon: '📉', industryId: 'tech',       trendBoost: -0.5, durationMs: 60_000 },
+  { label: 'Real estate rate cuts',             icon: '🏠', industryId: 'realestate', trendBoost: 0.4,  durationMs: 90_000 },
+  { label: 'Copper supply disruption',          icon: '⛏️', industryId: 'copper',     trendBoost: 0.4,  durationMs: 60_000 },
+  { label: 'Cloud demand explodes',             icon: '☁️', industryId: 'cloud',      trendBoost: 0.5,  durationMs: 60_000 },
+  { label: 'Gaming industry boom',              icon: '🎮', industryId: 'gaming',     trendBoost: 0.5,  durationMs: 60_000 },
+  { label: 'Logistics strike',                  icon: '⚠️', industryId: 'logistics',  trendBoost: -0.4, durationMs: 60_000 },
+];
+
+export const QUESTS: Quest[] = [
+  { id: 'q-own3',       label: 'Own 3 businesses',          target: 3,         reward: '+$500',     rewardMoney: 500,        metric: 'owned' },
+  { id: 'q-own-all',    label: 'Own every business',        target: BUSINESSES.length, reward: '+$50K', rewardMoney: 50_000, metric: 'owned' },
+  { id: 'q-earn-10k',   label: 'Earn $10K total',           target: 10_000,    reward: '+$1K',      rewardMoney: 1_000,      metric: 'totalEarned' },
+  { id: 'q-earn-1m',    label: 'Earn $1M total',            target: 1_000_000, reward: '+$50K',     rewardMoney: 50_000,     metric: 'totalEarned' },
+  { id: 'q-earn-100m',  label: 'Earn $100M total',          target: 100_000_000, reward: '+$5M',    rewardMoney: 5_000_000,  metric: 'totalEarned' },
+  { id: 'q-levels-50',  label: 'Reach 50 total biz levels', target: 50,        reward: '+$5K',      rewardMoney: 5_000,      metric: 'totalLevels' },
+  { id: 'q-levels-200', label: 'Reach 200 total biz levels',target: 200,       reward: '+$250K',    rewardMoney: 250_000,    metric: 'totalLevels' },
+  { id: 'q-mgr',        label: 'Hire 1 Manager',            target: 1,         reward: '+$2K',      rewardMoney: 2_000,      metric: 'managers' },
+  { id: 'q-mgr-3',      label: 'Hire 3 Managers',           target: 3,         reward: '+$20K',     rewardMoney: 20_000,     metric: 'managers' },
+  { id: 'q-staff-5',    label: 'Build a team of 5',         target: 5,         reward: '+$15K',     rewardMoney: 15_000,     metric: 'employees' },
+  { id: 'q-port-10k',   label: 'Hold $10K in stocks',       target: 10_000,    reward: '+$3K',      rewardMoney: 3_000,      metric: 'portfolio' },
+  { id: 'q-port-1m',    label: 'Hold $1M portfolio',        target: 1_000_000, reward: '+$100K',    rewardMoney: 100_000,    metric: 'portfolio' },
+  { id: 'q-up-3',       label: 'Buy 3 upgrades',            target: 3,         reward: '+$10K',     rewardMoney: 10_000,     metric: 'upgrades' },
+  { id: 'q-divs',       label: 'Earn $5K in dividends',     target: 5_000,     reward: '+$5K',      rewardMoney: 5_000,      metric: 'dividends' },
+  { id: 'q-prestige',   label: 'Prestige once',             target: 1,         reward: '+$100K',    rewardMoney: 100_000,    metric: 'prestige' },
+  { id: 'q-stocks-5',   label: 'Invest in 5 industries',    target: 5,         reward: '+$25K',     rewardMoney: 25_000,     metric: 'industries' },
+];
