@@ -1,4 +1,4 @@
-import { BUSINESSES, COST_GROWTH, UPGRADES, INDUSTRY_NAMES, INDUSTRY_VOLATILITY, INDUSTRY_DIVIDEND, DAILY_REWARDS, WHEEL_SEGMENTS, WHEEL_COOLDOWN_MS, MARKET_EVENT_POOL } from './config';
+import { BUSINESSES, COST_GROWTH, UPGRADES, INDUSTRY_NAMES, INDUSTRY_VOLATILITY, INDUSTRY_DIVIDEND, DAILY_REWARDS, WHEEL_SEGMENTS, WHEEL_COOLDOWN_MS, MARKET_EVENT_POOL, QUESTS } from './config';
 import { BusinessId, BusinessState, GameState, IndustryId, IndustryState, StockHolding } from './types';
 
 export const STORAGE_KEY = 'idle-empire-save-v1';
@@ -309,7 +309,6 @@ export function computeQuestProgress(state: GameState, metric: import('./types')
 }
 
 export function claimQuest(state: GameState, questId: string): GameState {
-  const { QUESTS } = require('./config') as typeof import('./config');
   const q = QUESTS.find((x) => x.id === questId);
   if (!q) return state;
   if (state.questsClaimed[questId]) return state;
