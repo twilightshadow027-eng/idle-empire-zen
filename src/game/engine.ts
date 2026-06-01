@@ -52,10 +52,21 @@ export function loadState(): GameState {
     const parsed = JSON.parse(raw) as GameState;
     // Heal missing fields from updates
     const fresh = createInitialState();
+    const mergedIndustries = { ...fresh.industries } as Record<IndustryId, IndustryState>;
+    (Object.keys(mergedIndustries) as IndustryId[]).forEach((id) => {
+      const saved = (parsed.industries ?? ({} as any))[id];
+      if (saved) {
+        mergedIndustries[id] = {
+          ...mergedIndustries[id],
+          ...saved,
+          basePrice: saved.basePrice ?? mergedIndustries[id].basePrice,
+        };
+      }
+    });
     return {
       ...fresh, ...parsed,
       businesses: { ...fresh.businesses, ...parsed.businesses },
-      industries: { ...fresh.industries, ...parsed.industries },
+      industries: mergedIndustries,
       clan: { ...fresh.clan, ...parsed.clan },
       activeBoosts: parsed.activeBoosts ?? [],
       lastWheelSpin: parsed.lastWheelSpin ?? 0,
@@ -63,6 +74,8 @@ export function loadState(): GameState {
       totalInvested: parsed.totalInvested ?? 0,
       totalRealized: parsed.totalRealized ?? 0,
       totalDividends: parsed.totalDividends ?? 0,
+      events: parsed.events ?? [],
+      questsClaimed: parsed.questsClaimed ?? {},
     };
   } catch {
     return createInitialState();
