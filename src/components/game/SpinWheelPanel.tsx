@@ -72,17 +72,27 @@ export function SpinWheelPanel() {
     // Roll the actual weighted result up-front so the wheel lands on it.
     const landed = getWheelResult();
     const segmentIndex = WHEEL_SEGMENTS.findIndex((s) => s.type === landed.type);
-    const spins = 5;
-    const extraJitter = Math.random() * 20 - 10;
-    const targetRotation = rotation + spins * 360 - (segmentIndex * SEGMENT_ANGLE + SEGMENT_ANGLE / 2) + extraJitter;
+    // Segment center sits at angle (segmentIndex * SEGMENT_ANGLE). The wheel must rotate
+    // CLOCKWISE so that center aligns under the pointer at the top.
+    // After N full spins, final rotation should make `rotation mod 360 === -segmentCenter (mod 360)`.
+    const fullSpins = 6;
+    const segmentCenter = segmentIndex * SEGMENT_ANGLE;
+    // Small jitter within the segment so it doesn't land dead-center every time.
+    const jitter = (Math.random() - 0.5) * (SEGMENT_ANGLE * 0.6);
+    const currentMod = ((rotation % 360) + 360) % 360;
+    const targetMod = ((-segmentCenter - jitter) % 360 + 360) % 360;
+    const delta = ((targetMod - currentMod) + 360) % 360;
+    const targetRotation = rotation + fullSpins * 360 + delta;
 
     setRotation(targetRotation);
 
     setTimeout(() => {
       spinAction(landed as WheelSegment);
-      setSpinning(false);
       setResult(landed as WheelSegment);
       setShowResult(true);
+      // Keep `spinning` true a moment longer so the long-duration transition class
+      // isn't swapped to the short one mid-frame (which can cause a visual snap).
+      setTimeout(() => setSpinning(false), 200);
     }, 4200);
   }, [spinning, available, rotation, spinAction]);
 
