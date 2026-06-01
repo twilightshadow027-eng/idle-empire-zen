@@ -159,4 +159,6 @@ export interface GameState {
   totalInvested: number;
   totalRealized: number;
   totalDividends: number;
+  events: MarketEvent[];
+  questsClaimed: Record<string, boolean>;
 }
