@@ -152,31 +152,65 @@ export function tick(state: GameState, dtSec: number): { state: GameState; earne
     }
   });
 
-  // Clean expired boosts
+  // Clean expired boosts & events
   const now = Date.now();
   if (next.activeBoosts.some((b) => b.expiresAt <= now)) {
     next.activeBoosts = next.activeBoosts.filter((b) => b.expiresAt > now);
   }
+  if ((next.events ?? []).some((e) => e.expiresAt <= now)) {
+    next.events = next.events.filter((e) => e.expiresAt > now);
+  }
 
-  // Drift market prices — volatility per industry, with occasional shocks
+  // Spawn a new market event occasionally (avg ~1 per 35s) — caps at 4 concurrent.
+  if ((next.events?.length ?? 0) < 4 && Math.random() < dtSec / 35) {
+    const pick = MARKET_EVENT_POOL[Math.floor(Math.random() * MARKET_EVENT_POOL.length)];
+    next.events = [...(next.events ?? []), {
+      id: crypto.randomUUID(),
+      label: pick.label,
+      icon: pick.icon,
+      industryId: pick.industryId,
+      trendBoost: pick.trendBoost,
+      expiresAt: now + pick.durationMs,
+    }];
+  }
+
+  // Index event biases by industry
+  const eventBias: Partial<Record<IndustryId, number>> = {};
+  (next.events ?? []).forEach((e) => {
+    eventBias[e.industryId] = (eventBias[e.industryId] ?? 0) + e.trendBoost;
+  });
+
+  // Drift market prices — mostly mean-revert to basePrice within ±20–40%, rare ±80% swings.
   (Object.keys(next.industries) as IndustryId[]).forEach((id) => {
     const ind = next.industries[id];
     const vol = INDUSTRY_VOLATILITY[id] ?? 1;
-    // Trend random walk (slower)
-    ind.trend += (Math.random() - 0.5) * 0.06 * vol * dtSec;
-    // Rare shock (pump/dump)
-    if (Math.random() < dtSec * 0.008 * vol) {
-      ind.trend += (Math.random() - 0.5) * 0.5 * vol;
+    const deviation = (ind.price - ind.basePrice) / ind.basePrice; // current % away from base
+    // Mean-revert trend: pull harder the further we are from base.
+    const reversion = -deviation * 0.04 * dtSec;
+    // Gentle random walk
+    ind.trend += (Math.random() - 0.5) * 0.03 * vol * dtSec + reversion;
+    // Event push
+    if (eventBias[id]) ind.trend += eventBias[id]! * dtSec * 0.5;
+    // Very rare big shock — can push toward ±80%
+    if (Math.random() < dtSec * 0.0015) {
+      ind.trend += (Math.random() - 0.5) * 1.8 * vol;
     }
-    ind.trend = Math.max(-1, Math.min(1, ind.trend * 0.99));
-    // Price moves with trend + jitter (much gentler)
-    const drift = ind.trend * 0.003 * vol * dtSec * 60;
-    const noise = (Math.random() - 0.5) * 0.0015 * vol;
-    ind.price = Math.max(1, ind.price * (1 + drift + noise));
+    ind.trend = Math.max(-1, Math.min(1, ind.trend * 0.992));
+    // Price evolves with trend + tiny noise
+    const drift = ind.trend * 0.0025 * vol * dtSec * 60;
+    const noise = (Math.random() - 0.5) * 0.0012 * vol;
+    let nextPrice = ind.price * (1 + drift + noise);
+    // Hard clamp: ±80% from base
+    const lo = ind.basePrice * 0.2;
+    const hi = ind.basePrice * 1.8;
+    if (nextPrice < lo) { nextPrice = lo; ind.trend = Math.max(ind.trend, 0.05); }
+    if (nextPrice > hi) { nextPrice = hi; ind.trend = Math.min(ind.trend, -0.05); }
+    ind.price = nextPrice;
     if (Math.random() < dtSec * 0.25) {
       ind.history = [...ind.history.slice(-19), ind.price];
     }
   });
+
 
   // Dividends — accrue cash each tick from stock holdings.
   let dividendTotal = 0;
