@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { BusinessId, GameState, IndustryId } from './types';
-import { buyOrUpgrade, buyStock, buyUpgrade, calculateOfflineEarnings, collectBusiness, claimDailyReward, loadState, saveState, sellStock, tick, spinWheel } from './engine';
+import { buyOrUpgrade, buyStock, buyUpgrade, calculateOfflineEarnings, collectBusiness, claimDailyReward, claimQuest, createInitialState, loadState, saveState, sellStock, tick, spinWheel } from './engine';
 import { EMPLOYEE_NAMES } from './config';
 
 interface FloatingNumber { id: number; amount: number; x: number; y: number; }
@@ -22,6 +22,7 @@ interface Store {
   spinWheelAction: (forced?: import('./types').WheelSegment) => void;
   buyStockAction: (id: IndustryId, shares: number) => void;
   sellStockAction: (id: IndustryId, shares: number) => void;
+  claimQuestAction: (questId: string) => void;
   clearOffline: () => void;
   reset: () => void;
 }
@@ -125,13 +126,18 @@ export const useGame = create<Store>((set, get) => ({
     const s = get().state;
     if (s.totalEarned < 1_000_000) return;
     const pts = Math.floor(Math.sqrt(s.totalEarned / 1_000_000));
-    const fresh = loadState();
+    // Fresh world: reset businesses, upgrades, employees, market, holdings, boosts, events, quests.
+    // Keep: prestige points (+earned), clan identity, daily-claim cadence.
+    const fresh = createInitialState();
     set({
       state: {
         ...fresh,
         money: 100,
         prestigePoints: s.prestigePoints + pts,
         clan: s.clan,
+        lastClaimedDate: s.lastClaimedDate,
+        claimStreak: s.claimStreak,
+        lastWheelSpin: s.lastWheelSpin,
         lastTick: Date.now(),
       },
     });
@@ -141,6 +147,7 @@ export const useGame = create<Store>((set, get) => ({
   spinWheelAction: (forced) => set({ state: spinWheel(get().state, EMPLOYEE_NAMES, forced as any) }),
   buyStockAction: (id, shares) => set({ state: buyStock(get().state, id, shares) }),
   sellStockAction: (id, shares) => set({ state: sellStock(get().state, id, shares) }),
+  claimQuestAction: (questId) => set({ state: claimQuest(get().state, questId) }),
 
   clearOffline: () => set({ offlineEarned: 0 }),
   reset: () => {

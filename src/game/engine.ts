@@ -1,4 +1,4 @@
-import { BUSINESSES, COST_GROWTH, UPGRADES, INDUSTRY_NAMES, INDUSTRY_VOLATILITY, INDUSTRY_DIVIDEND, DAILY_REWARDS, WHEEL_SEGMENTS, WHEEL_COOLDOWN_MS } from './config';
+import { BUSINESSES, COST_GROWTH, UPGRADES, INDUSTRY_NAMES, INDUSTRY_VOLATILITY, INDUSTRY_DIVIDEND, DAILY_REWARDS, WHEEL_SEGMENTS, WHEEL_COOLDOWN_MS, MARKET_EVENT_POOL, QUESTS } from './config';
 import { BusinessId, BusinessState, GameState, IndustryId, IndustryState, StockHolding } from './types';
 
 export const STORAGE_KEY = 'idle-empire-save-v1';
@@ -15,8 +15,9 @@ export function createInitialState(): GameState {
     industries[id] = {
       id, name: INDUSTRY_NAMES[id],
       price: basePrice,
-      trend: (Math.random() - 0.5) * 0.6 * vol,
-      history: Array.from({ length: 20 }, () => basePrice * (0.85 + Math.random() * 0.3)),
+      basePrice,
+      trend: (Math.random() - 0.5) * 0.4,
+      history: Array.from({ length: 20 }, () => basePrice * (0.92 + Math.random() * 0.16)),
     };
   });
   return {
@@ -39,6 +40,8 @@ export function createInitialState(): GameState {
     totalInvested: 0,
     totalRealized: 0,
     totalDividends: 0,
+    events: [],
+    questsClaimed: {},
   };
 }
 
@@ -49,10 +52,21 @@ export function loadState(): GameState {
     const parsed = JSON.parse(raw) as GameState;
     // Heal missing fields from updates
     const fresh = createInitialState();
+    const mergedIndustries = { ...fresh.industries } as Record<IndustryId, IndustryState>;
+    (Object.keys(mergedIndustries) as IndustryId[]).forEach((id) => {
+      const saved = (parsed.industries ?? ({} as any))[id];
+      if (saved) {
+        mergedIndustries[id] = {
+          ...mergedIndustries[id],
+          ...saved,
+          basePrice: saved.basePrice ?? mergedIndustries[id].basePrice,
+        };
+      }
+    });
     return {
       ...fresh, ...parsed,
       businesses: { ...fresh.businesses, ...parsed.businesses },
-      industries: { ...fresh.industries, ...parsed.industries },
+      industries: mergedIndustries,
       clan: { ...fresh.clan, ...parsed.clan },
       activeBoosts: parsed.activeBoosts ?? [],
       lastWheelSpin: parsed.lastWheelSpin ?? 0,
@@ -60,6 +74,8 @@ export function loadState(): GameState {
       totalInvested: parsed.totalInvested ?? 0,
       totalRealized: parsed.totalRealized ?? 0,
       totalDividends: parsed.totalDividends ?? 0,
+      events: parsed.events ?? [],
+      questsClaimed: parsed.questsClaimed ?? {},
     };
   } catch {
     return createInitialState();
@@ -136,31 +152,65 @@ export function tick(state: GameState, dtSec: number): { state: GameState; earne
     }
   });
 
-  // Clean expired boosts
+  // Clean expired boosts & events
   const now = Date.now();
   if (next.activeBoosts.some((b) => b.expiresAt <= now)) {
     next.activeBoosts = next.activeBoosts.filter((b) => b.expiresAt > now);
   }
+  if ((next.events ?? []).some((e) => e.expiresAt <= now)) {
+    next.events = next.events.filter((e) => e.expiresAt > now);
+  }
 
-  // Drift market prices — volatility per industry, with occasional shocks
+  // Spawn a new market event occasionally (avg ~1 per 35s) — caps at 4 concurrent.
+  if ((next.events?.length ?? 0) < 4 && Math.random() < dtSec / 35) {
+    const pick = MARKET_EVENT_POOL[Math.floor(Math.random() * MARKET_EVENT_POOL.length)];
+    next.events = [...(next.events ?? []), {
+      id: crypto.randomUUID(),
+      label: pick.label,
+      icon: pick.icon,
+      industryId: pick.industryId,
+      trendBoost: pick.trendBoost,
+      expiresAt: now + pick.durationMs,
+    }];
+  }
+
+  // Index event biases by industry
+  const eventBias: Partial<Record<IndustryId, number>> = {};
+  (next.events ?? []).forEach((e) => {
+    eventBias[e.industryId] = (eventBias[e.industryId] ?? 0) + e.trendBoost;
+  });
+
+  // Drift market prices — mostly mean-revert to basePrice within ±20–40%, rare ±80% swings.
   (Object.keys(next.industries) as IndustryId[]).forEach((id) => {
     const ind = next.industries[id];
     const vol = INDUSTRY_VOLATILITY[id] ?? 1;
-    // Trend random walk (slower)
-    ind.trend += (Math.random() - 0.5) * 0.06 * vol * dtSec;
-    // Rare shock (pump/dump)
-    if (Math.random() < dtSec * 0.008 * vol) {
-      ind.trend += (Math.random() - 0.5) * 0.5 * vol;
+    const deviation = (ind.price - ind.basePrice) / ind.basePrice; // current % away from base
+    // Mean-revert trend: pull harder the further we are from base.
+    const reversion = -deviation * 0.04 * dtSec;
+    // Gentle random walk
+    ind.trend += (Math.random() - 0.5) * 0.03 * vol * dtSec + reversion;
+    // Event push
+    if (eventBias[id]) ind.trend += eventBias[id]! * dtSec * 0.5;
+    // Very rare big shock — can push toward ±80%
+    if (Math.random() < dtSec * 0.0015) {
+      ind.trend += (Math.random() - 0.5) * 1.8 * vol;
     }
-    ind.trend = Math.max(-1, Math.min(1, ind.trend * 0.99));
-    // Price moves with trend + jitter (much gentler)
-    const drift = ind.trend * 0.003 * vol * dtSec * 60;
-    const noise = (Math.random() - 0.5) * 0.0015 * vol;
-    ind.price = Math.max(1, ind.price * (1 + drift + noise));
+    ind.trend = Math.max(-1, Math.min(1, ind.trend * 0.992));
+    // Price evolves with trend + tiny noise
+    const drift = ind.trend * 0.0025 * vol * dtSec * 60;
+    const noise = (Math.random() - 0.5) * 0.0012 * vol;
+    let nextPrice = ind.price * (1 + drift + noise);
+    // Hard clamp: ±80% from base
+    const lo = ind.basePrice * 0.2;
+    const hi = ind.basePrice * 1.8;
+    if (nextPrice < lo) { nextPrice = lo; ind.trend = Math.max(ind.trend, 0.05); }
+    if (nextPrice > hi) { nextPrice = hi; ind.trend = Math.min(ind.trend, -0.05); }
+    ind.price = nextPrice;
     if (Math.random() < dtSec * 0.25) {
       ind.history = [...ind.history.slice(-19), ind.price];
     }
   });
+
 
   // Dividends — accrue cash each tick from stock holdings.
   let dividendTotal = 0;
@@ -232,11 +282,44 @@ export function calculateOfflineEarnings(state: GameState, nowMs: number): numbe
 }
 
 export function formatMoney(n: number): string {
-  if (n < 1000) return `$${n.toFixed(n < 10 ? 2 : 0)}`;
+  if (!isFinite(n)) return '$0';
+  const neg = n < 0;
+  const abs = Math.abs(n);
+  const sign = neg ? '-' : '';
+  if (abs < 1000) return `${sign}$${abs.toFixed(abs < 10 ? 2 : 0)}`;
   const units = ['', 'K', 'M', 'B', 'T', 'Qa', 'Qi', 'Sx', 'Sp', 'Oc'];
-  const tier = Math.floor(Math.log10(Math.abs(n)) / 3);
-  const v = n / Math.pow(1000, tier);
-  return `$${v.toFixed(v < 10 ? 2 : v < 100 ? 1 : 0)}${units[tier] ?? 'e' + tier * 3}`;
+  const tier = Math.floor(Math.log10(abs) / 3);
+  const v = abs / Math.pow(1000, tier);
+  return `${sign}$${v.toFixed(v < 10 ? 2 : v < 100 ? 1 : 0)}${units[tier] ?? 'e' + tier * 3}`;
+}
+
+export function computeQuestProgress(state: GameState, metric: import('./types').Quest['metric']): number {
+  switch (metric) {
+    case 'owned': return Object.values(state.businesses).filter((b) => b.owned).length;
+    case 'totalEarned': return state.totalEarned;
+    case 'totalLevels': return Object.values(state.businesses).reduce((a, b) => a + b.level, 0);
+    case 'managers': return state.employees.filter((e) => e.role === 'Manager').length;
+    case 'employees': return state.employees.length;
+    case 'portfolio': return Object.entries(state.holdings).reduce((s, [id, h]) => s + (h?.shares ?? 0) * (state.industries[id as IndustryId]?.price ?? 0), 0);
+    case 'upgrades': return Object.values(state.upgrades).filter(Boolean).length;
+    case 'dividends': return state.totalDividends;
+    case 'prestige': return state.prestigePoints;
+    case 'industries': return Object.values(state.holdings).filter((h) => (h?.shares ?? 0) > 0).length;
+  }
+  return 0;
+}
+
+export function claimQuest(state: GameState, questId: string): GameState {
+  const q = QUESTS.find((x) => x.id === questId);
+  if (!q) return state;
+  if (state.questsClaimed[questId]) return state;
+  if (computeQuestProgress(state, q.metric) < q.target) return state;
+  return {
+    ...state,
+    money: state.money + q.rewardMoney,
+    totalEarned: state.totalEarned + q.rewardMoney,
+    questsClaimed: { ...state.questsClaimed, [questId]: true },
+  };
 }
 
 function getToday(): string {
