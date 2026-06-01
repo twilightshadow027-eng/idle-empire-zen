@@ -282,11 +282,44 @@ export function calculateOfflineEarnings(state: GameState, nowMs: number): numbe
 }
 
 export function formatMoney(n: number): string {
-  if (n < 1000) return `$${n.toFixed(n < 10 ? 2 : 0)}`;
+  if (!isFinite(n)) return '$0';
+  const neg = n < 0;
+  const abs = Math.abs(n);
+  const sign = neg ? '-' : '';
+  if (abs < 1000) return `${sign}$${abs.toFixed(abs < 10 ? 2 : 0)}`;
   const units = ['', 'K', 'M', 'B', 'T', 'Qa', 'Qi', 'Sx', 'Sp', 'Oc'];
-  const tier = Math.floor(Math.log10(Math.abs(n)) / 3);
-  const v = n / Math.pow(1000, tier);
-  return `$${v.toFixed(v < 10 ? 2 : v < 100 ? 1 : 0)}${units[tier] ?? 'e' + tier * 3}`;
+  const tier = Math.floor(Math.log10(abs) / 3);
+  const v = abs / Math.pow(1000, tier);
+  return `${sign}$${v.toFixed(v < 10 ? 2 : v < 100 ? 1 : 0)}${units[tier] ?? 'e' + tier * 3}`;
+}
+
+export function computeQuestProgress(state: GameState, metric: import('./types').Quest['metric']): number {
+  switch (metric) {
+    case 'owned': return Object.values(state.businesses).filter((b) => b.owned).length;
+    case 'totalEarned': return state.totalEarned;
+    case 'totalLevels': return Object.values(state.businesses).reduce((a, b) => a + b.level, 0);
+    case 'managers': return state.employees.filter((e) => e.role === 'Manager').length;
+    case 'employees': return state.employees.length;
+    case 'portfolio': return Object.entries(state.holdings).reduce((s, [id, h]) => s + (h?.shares ?? 0) * (state.industries[id as IndustryId]?.price ?? 0), 0);
+    case 'upgrades': return Object.values(state.upgrades).filter(Boolean).length;
+    case 'dividends': return state.totalDividends;
+    case 'prestige': return state.prestigePoints;
+    case 'industries': return Object.values(state.holdings).filter((h) => (h?.shares ?? 0) > 0).length;
+  }
+}
+
+export function claimQuest(state: GameState, questId: string): GameState {
+  const { QUESTS } = require('./config') as typeof import('./config');
+  const q = QUESTS.find((x) => x.id === questId);
+  if (!q) return state;
+  if (state.questsClaimed[questId]) return state;
+  if (computeQuestProgress(state, q.metric) < q.target) return state;
+  return {
+    ...state,
+    money: state.money + q.rewardMoney,
+    totalEarned: state.totalEarned + q.rewardMoney,
+    questsClaimed: { ...state.questsClaimed, [questId]: true },
+  };
 }
 
 function getToday(): string {
