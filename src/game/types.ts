@@ -44,8 +44,27 @@ export interface IndustryState {
   id: IndustryId;
   name: string;
   price: number;
+  basePrice: number;
   trend: number; // -1..1
   history: number[];
+}
+
+export interface MarketEvent {
+  id: string;
+  label: string;
+  icon: string;
+  industryId: IndustryId;
+  trendBoost: number;       // additive trend bias per second
+  expiresAt: number;
+}
+
+export interface Quest {
+  id: string;
+  label: string;
+  target: number;
+  reward: string;
+  rewardMoney: number;
+  metric: 'owned' | 'totalEarned' | 'totalLevels' | 'managers' | 'portfolio' | 'employees' | 'upgrades' | 'dividends' | 'prestige' | 'industries';
 }
 
 export type UpgradeId =
