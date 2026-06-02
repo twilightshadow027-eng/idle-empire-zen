@@ -136,21 +136,19 @@ export const useGame = create<Store>((set, get) => ({
     const s = get().state;
     if (s.totalEarned < 1_000_000) return;
     const pts = Math.floor(Math.sqrt(s.totalEarned / 1_000_000));
-    // Fresh world: reset businesses, upgrades, employees, market, holdings, boosts, events, quests.
-    // Keep: prestige points (+earned), clan identity, daily-claim cadence.
     const fresh = createInitialState();
-    set({
-      state: {
-        ...fresh,
-        money: 100,
-        prestigePoints: s.prestigePoints + pts,
-        clan: s.clan,
-        lastClaimedDate: s.lastClaimedDate,
-        claimStreak: s.claimStreak,
-        lastWheelSpin: s.lastWheelSpin,
-        lastTick: Date.now(),
-      },
-    });
+    const reset: GameState = {
+      ...fresh,
+      money: 100,
+      prestigePoints: s.prestigePoints + pts,
+      clan: s.clan,
+      lastClaimedDate: s.lastClaimedDate,
+      claimStreak: s.claimStreak,
+      lastWheelSpin: s.lastWheelSpin,
+      lastTick: Date.now(),
+      transactions: s.transactions, // keep ledger history through prestige
+    };
+    set({ state: withTx(reset, 'prestige', `Prestige reset — +${pts} prestige`, 0) });
   },
 
   claimDailyReward: () => set({ state: claimDailyReward(get().state) }),
