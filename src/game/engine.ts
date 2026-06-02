@@ -280,7 +280,7 @@ export function collectBusiness(state: GameState, id: BusinessId): { state: Game
     totalEarned: state.totalEarned + amount,
     businesses: { ...state.businesses, [id]: { ...b, progress: 0 } },
   };
-  return { state: next, amount };
+  return { state: withTx(next, 'collect', `${def.icon} ${def.name} collected`, amount), amount };
 }
 
 export function buyOrUpgrade(state: GameState, id: BusinessId): GameState {
@@ -288,11 +288,13 @@ export function buyOrUpgrade(state: GameState, id: BusinessId): GameState {
   const b = state.businesses[id];
   const cost = businessCost(def.baseCost, b.level);
   if (state.money < cost) return state;
-  return {
+  const next: GameState = {
     ...state,
     money: state.money - cost,
     businesses: { ...state.businesses, [id]: { ...b, owned: true, level: b.level + 1 } },
   };
+  const label = b.owned ? `Upgrade ${def.name} → Lv${b.level + 1}` : `Buy ${def.name}`;
+  return withTx(next, 'business', `${def.icon} ${label}`, -cost);
 }
 
 export function buyUpgrade(state: GameState, id: string): GameState {
@@ -300,7 +302,8 @@ export function buyUpgrade(state: GameState, id: string): GameState {
   if (!u) return state;
   if (state.upgrades[u.id]) return state;
   if (state.money < u.cost) return state;
-  return { ...state, money: state.money - u.cost, upgrades: { ...state.upgrades, [u.id]: true } };
+  const next = { ...state, money: state.money - u.cost, upgrades: { ...state.upgrades, [u.id]: true } };
+  return withTx(next, 'upgrade', `Upgrade: ${u.name}`, -u.cost);
 }
 
 export function calculateOfflineEarnings(state: GameState, nowMs: number): number {
