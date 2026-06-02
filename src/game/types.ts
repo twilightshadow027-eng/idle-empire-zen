@@ -136,6 +136,21 @@ export interface ActiveBoost {
   expiresAt: number; // timestamp
 }
 
+export type TxKind =
+  | 'collect' | 'auto' | 'dividend'
+  | 'business' | 'upgrade'
+  | 'hire' | 'fire'
+  | 'market_buy' | 'market_sell'
+  | 'wheel' | 'daily' | 'quest' | 'prestige' | 'event';
+
+export interface Transaction {
+  id: string;
+  ts: number;
+  kind: TxKind;
+  label: string;
+  amount: number; // signed
+}
+
 export interface GameState {
   money: number;
   totalEarned: number;
@@ -148,17 +163,16 @@ export interface GameState {
   clan: ClanState;
   lastTick: number;
   prestigePoints: number;
-  // Daily rewards
-  lastClaimedDate: string; // YYYY-MM-DD
+  lastClaimedDate: string;
   claimStreak: number;
-  // Wheel
-  lastWheelSpin: number; // timestamp
+  lastWheelSpin: number;
   activeBoosts: ActiveBoost[];
-  // Stock market
   holdings: Record<IndustryId, StockHolding>;
   totalInvested: number;
   totalRealized: number;
   totalDividends: number;
   events: MarketEvent[];
   questsClaimed: Record<string, boolean>;
+  transactions: Transaction[];
+  lastDividendLogTs: number;
 }
