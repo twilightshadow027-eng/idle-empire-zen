@@ -1,4 +1,5 @@
 import { useGame } from '@/game/store';
+import { useUI } from '@/game/uiStore';
 import { AnimatedCounter } from './AnimatedCounter';
 import { TrendingDown, TrendingUp, Trophy, Sparkles, Gift, Dices } from 'lucide-react';
 import { canClaimToday, canSpin } from '@/game/engine';
