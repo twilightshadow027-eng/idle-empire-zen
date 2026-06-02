@@ -33,10 +33,7 @@ export function TopBar() {
         <div className="flex items-center gap-2 sm:gap-3">
           {dailyAvailable && (
             <button
-              onClick={() => {
-                const rewardsBtn = Array.from(document.querySelectorAll('nav button')).find(b => b.textContent?.includes('Daily')) as HTMLElement | undefined;
-                rewardsBtn?.click();
-              }}
+              onClick={() => setTab('rewards')}
               className={cn(
                 'relative flex items-center gap-1.5 rounded-lg border border-primary/60 bg-primary/15 px-2.5 py-1.5 animate-pulse',
               )}
