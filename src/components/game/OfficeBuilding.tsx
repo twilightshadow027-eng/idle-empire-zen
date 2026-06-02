@@ -52,7 +52,7 @@ export function OfficeBuilding() {
           {Array.from({ length: floors }).map((_, i) => (
             <div key={i} className="flex w-28 justify-center gap-1.5 border-b border-background/40 px-2 py-1.5">
               {Array.from({ length: 4 }).map((_, j) => {
-                const lit = (i + j + Math.floor(Date.now() / 2000)) % 3 !== 0;
+                const lit = (i + j + lightSeed) % 3 !== 0;
                 return (
                   <div
                     key={j}
