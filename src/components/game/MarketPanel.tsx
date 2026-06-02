@@ -1,6 +1,7 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { Area, AreaChart, ResponsiveContainer, YAxis } from 'recharts';
 import { useGame } from '@/game/store';
+import { useUI } from '@/game/uiStore';
 import { formatMoney } from '@/game/engine';
 import { INDUSTRY_DIVIDEND, INDUSTRY_CATEGORY, CATEGORY_ORDER, CATEGORY_LABELS } from '@/game/config';
 import type { IndustryCategory, IndustryId, IndustryState, StockHolding } from '@/game/types';
