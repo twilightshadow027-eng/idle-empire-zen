@@ -354,12 +354,13 @@ export function claimQuest(state: GameState, questId: string): GameState {
   if (!q) return state;
   if (state.questsClaimed[questId]) return state;
   if (computeQuestProgress(state, q.metric) < q.target) return state;
-  return {
+  const next = {
     ...state,
     money: state.money + q.rewardMoney,
     totalEarned: state.totalEarned + q.rewardMoney,
     questsClaimed: { ...state.questsClaimed, [questId]: true },
   };
+  return withTx(next, 'quest', `Quest: ${q.label}`, q.rewardMoney);
 }
 
 function getToday(): string {
