@@ -59,6 +59,8 @@ export function createInitialState(): GameState {
     totalDividends: 0,
     events: [],
     questsClaimed: {},
+    transactions: [],
+    lastDividendLogTs: 0,
   };
 }
 
