@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { BusinessId, GameState, IndustryId } from './types';
-import { buyOrUpgrade, buyStock, buyUpgrade, calculateOfflineEarnings, collectBusiness, claimDailyReward, claimQuest, createInitialState, loadState, saveState, sellStock, tick, spinWheel } from './engine';
+import { buyOrUpgrade, buyStock, buyUpgrade, calculateOfflineEarnings, collectBusiness, claimDailyReward, claimQuest, createInitialState, loadState, saveState, sellStock, tick, spinWheel, withTx } from './engine';
 import { EMPLOYEE_NAMES } from './config';
 
 interface FloatingNumber { id: number; amount: number; x: number; y: number; }
