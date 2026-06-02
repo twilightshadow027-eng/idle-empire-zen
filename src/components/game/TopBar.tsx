@@ -1,4 +1,5 @@
 import { useGame } from '@/game/store';
+import { useUI } from '@/game/uiStore';
 import { AnimatedCounter } from './AnimatedCounter';
 import { TrendingDown, TrendingUp, Trophy, Sparkles, Gift, Dices } from 'lucide-react';
 import { canClaimToday, canSpin } from '@/game/engine';
@@ -12,6 +13,7 @@ export function TopBar() {
   const state = useGame((s) => s.state);
   const dailyAvailable = canClaimToday(state);
   const wheelAvailable = canSpin(state);
+  const setTab = useUI((s) => s.setTab);
 
   const tickerItems = Object.values(industries);
 
@@ -31,10 +33,7 @@ export function TopBar() {
         <div className="flex items-center gap-2 sm:gap-3">
           {dailyAvailable && (
             <button
-              onClick={() => {
-                const rewardsBtn = Array.from(document.querySelectorAll('nav button')).find(b => b.textContent?.includes('Daily')) as HTMLElement | undefined;
-                rewardsBtn?.click();
-              }}
+              onClick={() => setTab('rewards')}
               className={cn(
                 'relative flex items-center gap-1.5 rounded-lg border border-primary/60 bg-primary/15 px-2.5 py-1.5 animate-pulse',
               )}
@@ -49,10 +48,7 @@ export function TopBar() {
           )}
           {wheelAvailable && (
             <button
-              onClick={() => {
-                const wheelBtn = Array.from(document.querySelectorAll('nav button')).find(b => b.textContent?.includes('Wheel')) as HTMLElement | undefined;
-                wheelBtn?.click();
-              }}
+              onClick={() => setTab('wheel')}
               className={cn(
                 'relative flex items-center gap-1.5 rounded-lg border border-accent/60 bg-accent/15 px-2.5 py-1.5 animate-pulse',
               )}

@@ -1,5 +1,22 @@
 import { BUSINESSES, COST_GROWTH, UPGRADES, INDUSTRY_NAMES, INDUSTRY_VOLATILITY, INDUSTRY_DIVIDEND, DAILY_REWARDS, WHEEL_SEGMENTS, WHEEL_COOLDOWN_MS, MARKET_EVENT_POOL, QUESTS } from './config';
-import { BusinessId, BusinessState, GameState, IndustryId, IndustryState, StockHolding } from './types';
+import { BusinessId, BusinessState, GameState, IndustryId, IndustryState, StockHolding, Transaction, TxKind } from './types';
+
+const TX_CAP = 250;
+
+function newTx(kind: TxKind, label: string, amount: number): Transaction {
+  return { id: crypto.randomUUID(), ts: Date.now(), kind, label, amount };
+}
+
+/** Immutable: return new state with tx prepended. */
+export function withTx(s: GameState, kind: TxKind, label: string, amount: number): GameState {
+  return { ...s, transactions: [newTx(kind, label, amount), ...(s.transactions ?? [])].slice(0, TX_CAP) };
+}
+
+/** Mutating: only safe on a freshly-cloned state (e.g. inside tick). */
+function pushTx(s: GameState, kind: TxKind, label: string, amount: number) {
+  s.transactions = [newTx(kind, label, amount), ...(s.transactions ?? [])].slice(0, TX_CAP);
+}
+
 
 export const STORAGE_KEY = 'idle-empire-save-v1';
 
@@ -42,6 +59,8 @@ export function createInitialState(): GameState {
     totalDividends: 0,
     events: [],
     questsClaimed: {},
+    transactions: [],
+    lastDividendLogTs: 0,
   };
 }
 
@@ -76,6 +95,8 @@ export function loadState(): GameState {
       totalDividends: parsed.totalDividends ?? 0,
       events: parsed.events ?? [],
       questsClaimed: parsed.questsClaimed ?? {},
+      transactions: parsed.transactions ?? [],
+      lastDividendLogTs: parsed.lastDividendLogTs ?? 0,
     };
   } catch {
     return createInitialState();
@@ -128,31 +149,47 @@ export function getGlobalMultipliers(s: GameState) {
 }
 
 export function tick(state: GameState, dtSec: number): { state: GameState; earned: { id: BusinessId; amount: number }[] } {
-  const next = { ...state, businesses: { ...state.businesses } };
+  // Deep-clone mutable sub-state so we don't mutate the previous reference.
+  const next: GameState = {
+    ...state,
+    businesses: Object.fromEntries(
+      Object.entries(state.businesses).map(([k, v]) => [k, { ...v }])
+    ) as Record<BusinessId, BusinessState>,
+    industries: Object.fromEntries(
+      Object.entries(state.industries).map(([k, v]) => [k, { ...v }])
+    ) as Record<IndustryId, IndustryState>,
+    transactions: state.transactions ?? [],
+  };
   const { income: incMult, speed, perBiz } = getGlobalMultipliers(next);
   const earned: { id: BusinessId; amount: number }[] = [];
+  // Aggregate manager auto-collect per business per tick for the ledger.
+  const autoAgg: Partial<Record<BusinessId, number>> = {};
 
   BUSINESSES.forEach((def) => {
     const b = next.businesses[def.id];
     if (!b.owned || b.level === 0) return;
     const cycle = def.productionTime / speed;
     b.progress += dtSec / cycle;
-    while (b.progress >= 1) {
+    let safety = 0;
+    while (b.progress >= 1 && safety++ < 50) {
       b.progress -= 1;
       if (b.hasManager) {
         const amt = businessIncome(def.baseIncome, b.level, incMult, perBiz[def.id] ?? 1);
         next.money += amt;
         next.totalEarned += amt;
         earned.push({ id: def.id, amount: amt });
+        autoAgg[def.id] = (autoAgg[def.id] ?? 0) + amt;
       } else {
-        // Stop at 1, await manual collect
         b.progress = 1;
         break;
       }
     }
   });
+  (Object.keys(autoAgg) as BusinessId[]).forEach((id) => {
+    const def = BUSINESSES.find((b) => b.id === id)!;
+    pushTx(next, 'auto', `${def.icon} ${def.name} auto-collect`, autoAgg[id]!);
+  });
 
-  // Clean expired boosts & events
   const now = Date.now();
   if (next.activeBoosts.some((b) => b.expiresAt <= now)) {
     next.activeBoosts = next.activeBoosts.filter((b) => b.expiresAt > now);
@@ -161,7 +198,6 @@ export function tick(state: GameState, dtSec: number): { state: GameState; earne
     next.events = next.events.filter((e) => e.expiresAt > now);
   }
 
-  // Spawn a new market event occasionally (avg ~1 per 35s) — caps at 4 concurrent.
   if ((next.events?.length ?? 0) < 4 && Math.random() < dtSec / 35) {
     const pick = MARKET_EVENT_POOL[Math.floor(Math.random() * MARKET_EVENT_POOL.length)];
     next.events = [...(next.events ?? []), {
@@ -172,35 +208,28 @@ export function tick(state: GameState, dtSec: number): { state: GameState; earne
       trendBoost: pick.trendBoost,
       expiresAt: now + pick.durationMs,
     }];
+    pushTx(next, 'event', `${pick.icon} ${pick.label} (${INDUSTRY_NAMES[pick.industryId]})`, 0);
   }
 
-  // Index event biases by industry
   const eventBias: Partial<Record<IndustryId, number>> = {};
   (next.events ?? []).forEach((e) => {
     eventBias[e.industryId] = (eventBias[e.industryId] ?? 0) + e.trendBoost;
   });
 
-  // Drift market prices — mostly mean-revert to basePrice within ±20–40%, rare ±80% swings.
   (Object.keys(next.industries) as IndustryId[]).forEach((id) => {
     const ind = next.industries[id];
     const vol = INDUSTRY_VOLATILITY[id] ?? 1;
-    const deviation = (ind.price - ind.basePrice) / ind.basePrice; // current % away from base
-    // Mean-revert trend: pull harder the further we are from base.
+    const deviation = (ind.price - ind.basePrice) / ind.basePrice;
     const reversion = -deviation * 0.04 * dtSec;
-    // Gentle random walk
     ind.trend += (Math.random() - 0.5) * 0.03 * vol * dtSec + reversion;
-    // Event push
     if (eventBias[id]) ind.trend += eventBias[id]! * dtSec * 0.5;
-    // Very rare big shock — can push toward ±80%
     if (Math.random() < dtSec * 0.0015) {
       ind.trend += (Math.random() - 0.5) * 1.8 * vol;
     }
     ind.trend = Math.max(-1, Math.min(1, ind.trend * 0.992));
-    // Price evolves with trend + tiny noise
     const drift = ind.trend * 0.0025 * vol * dtSec * 60;
     const noise = (Math.random() - 0.5) * 0.0012 * vol;
     let nextPrice = ind.price * (1 + drift + noise);
-    // Hard clamp: ±80% from base
     const lo = ind.basePrice * 0.2;
     const hi = ind.basePrice * 1.8;
     if (nextPrice < lo) { nextPrice = lo; ind.trend = Math.max(ind.trend, 0.05); }
@@ -211,8 +240,7 @@ export function tick(state: GameState, dtSec: number): { state: GameState; earne
     }
   });
 
-
-  // Dividends — accrue cash each tick from stock holdings.
+  // Dividends — log aggregate roughly once per minute.
   let dividendTotal = 0;
   (Object.keys(next.holdings) as IndustryId[]).forEach((id) => {
     const h = next.holdings[id];
@@ -226,6 +254,15 @@ export function tick(state: GameState, dtSec: number): { state: GameState; earne
     next.money += dividendTotal;
     next.totalEarned += dividendTotal;
     next.totalDividends += dividendTotal;
+    if (now - (next.lastDividendLogTs ?? 0) >= 60_000) {
+      const since = next.lastDividendLogTs ? (now - next.lastDividendLogTs) / 1000 : 60;
+      // Estimate batch by per-second rate
+      const batch = dividendTotal * (since / dtSec);
+      pushTx(next, 'dividend', `Dividend payouts (last ${Math.round(since)}s)`, batch);
+      next.lastDividendLogTs = now;
+    } else if (next.lastDividendLogTs === 0) {
+      next.lastDividendLogTs = now;
+    }
   }
 
   return { state: next, earned };
@@ -243,7 +280,7 @@ export function collectBusiness(state: GameState, id: BusinessId): { state: Game
     totalEarned: state.totalEarned + amount,
     businesses: { ...state.businesses, [id]: { ...b, progress: 0 } },
   };
-  return { state: next, amount };
+  return { state: withTx(next, 'collect', `${def.icon} ${def.name} collected`, amount), amount };
 }
 
 export function buyOrUpgrade(state: GameState, id: BusinessId): GameState {
@@ -251,11 +288,13 @@ export function buyOrUpgrade(state: GameState, id: BusinessId): GameState {
   const b = state.businesses[id];
   const cost = businessCost(def.baseCost, b.level);
   if (state.money < cost) return state;
-  return {
+  const next: GameState = {
     ...state,
     money: state.money - cost,
     businesses: { ...state.businesses, [id]: { ...b, owned: true, level: b.level + 1 } },
   };
+  const label = b.owned ? `Upgrade ${def.name} → Lv${b.level + 1}` : `Buy ${def.name}`;
+  return withTx(next, 'business', `${def.icon} ${label}`, -cost);
 }
 
 export function buyUpgrade(state: GameState, id: string): GameState {
@@ -263,7 +302,8 @@ export function buyUpgrade(state: GameState, id: string): GameState {
   if (!u) return state;
   if (state.upgrades[u.id]) return state;
   if (state.money < u.cost) return state;
-  return { ...state, money: state.money - u.cost, upgrades: { ...state.upgrades, [u.id]: true } };
+  const next = { ...state, money: state.money - u.cost, upgrades: { ...state.upgrades, [u.id]: true } };
+  return withTx(next, 'upgrade', `Upgrade: ${u.name}`, -u.cost);
 }
 
 export function calculateOfflineEarnings(state: GameState, nowMs: number): number {
@@ -314,12 +354,13 @@ export function claimQuest(state: GameState, questId: string): GameState {
   if (!q) return state;
   if (state.questsClaimed[questId]) return state;
   if (computeQuestProgress(state, q.metric) < q.target) return state;
-  return {
+  const next = {
     ...state,
     money: state.money + q.rewardMoney,
     totalEarned: state.totalEarned + q.rewardMoney,
     questsClaimed: { ...state.questsClaimed, [questId]: true },
   };
+  return withTx(next, 'quest', `Quest: ${q.label}`, q.rewardMoney);
 }
 
 function getToday(): string {
@@ -356,7 +397,7 @@ export function claimDailyReward(state: GameState): GameState {
   if ('prestige' in reward && reward.prestige) {
     next.prestigePoints = next.prestigePoints + reward.prestige;
   }
-  return next;
+  return withTx(next, 'daily', `${reward.icon} Daily Reward (Day ${streak})`, reward.money);
 }
 
 export function canSpin(state: GameState): boolean {
@@ -431,7 +472,7 @@ export function spinWheel(state: GameState, empNames: string[], forcedResult?: t
     default:
       break;
   }
-  return next;
+  return withTx(next, 'wheel', `Wheel: ${result.icon} ${result.label}`, result.type === 'cash' || result.type === 'mega_cash' ? result.value : 0);
 }
 
 
@@ -444,12 +485,13 @@ export function buyStock(state: GameState, id: IndustryId, shares: number): Game
   const existing = state.holdings[id] ?? { shares: 0, avgCost: 0 };
   const newShares = existing.shares + shares;
   const newAvg = (existing.avgCost * existing.shares + cost) / newShares;
-  return {
+  const next = {
     ...state,
     money: state.money - cost,
     totalInvested: state.totalInvested + cost,
     holdings: { ...state.holdings, [id]: { shares: newShares, avgCost: newAvg } },
   };
+  return withTx(next, 'market_buy', `Buy ${shares} ${INDUSTRY_NAMES[id]} @ $${ind.price.toFixed(2)}`, -cost);
 }
 
 export function sellStock(state: GameState, id: IndustryId, shares: number): GameState {
@@ -460,7 +502,7 @@ export function sellStock(state: GameState, id: IndustryId, shares: number): Gam
   const proceeds = ind.price * shares;
   const remaining = existing.shares - shares;
   const realized = proceeds - existing.avgCost * shares;
-  return {
+  const next = {
     ...state,
     money: state.money + proceeds,
     totalEarned: state.totalEarned + Math.max(0, realized),
@@ -470,4 +512,5 @@ export function sellStock(state: GameState, id: IndustryId, shares: number): Gam
       [id]: { shares: remaining, avgCost: remaining === 0 ? 0 : existing.avgCost },
     },
   };
+  return withTx(next, 'market_sell', `Sell ${shares} ${INDUSTRY_NAMES[id]} @ $${ind.price.toFixed(2)} (P/L ${realized >= 0 ? '+' : ''}${formatMoney(realized)})`, proceeds);
 }

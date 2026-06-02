@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { useGame } from '@/game/store';
 import { BUSINESSES } from '@/game/config';
 import { FloatingNumbers } from './FloatingNumbers';
@@ -8,6 +9,12 @@ export function OfficeBuilding() {
   const tier = Math.min(5, Math.floor(ownedCount));
 
   const floors = Math.max(3, tier + 3);
+
+  const [lightSeed, setLightSeed] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setLightSeed((n) => n + 1), 2000);
+    return () => clearInterval(id);
+  }, []);
 
   return (
     <div className="relative flex h-full min-h-[260px] items-end justify-center overflow-hidden rounded-2xl border border-border/60 bg-card-gradient">
@@ -45,7 +52,7 @@ export function OfficeBuilding() {
           {Array.from({ length: floors }).map((_, i) => (
             <div key={i} className="flex w-28 justify-center gap-1.5 border-b border-background/40 px-2 py-1.5">
               {Array.from({ length: 4 }).map((_, j) => {
-                const lit = (i + j + Math.floor(Date.now() / 2000)) % 3 !== 0;
+                const lit = (i + j + lightSeed) % 3 !== 0;
                 return (
                   <div
                     key={j}

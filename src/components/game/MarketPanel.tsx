@@ -1,6 +1,7 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { Area, AreaChart, ResponsiveContainer, YAxis } from 'recharts';
 import { useGame } from '@/game/store';
+import { useUI } from '@/game/uiStore';
 import { formatMoney } from '@/game/engine';
 import { INDUSTRY_DIVIDEND, INDUSTRY_CATEGORY, CATEGORY_ORDER, CATEGORY_LABELS } from '@/game/config';
 import type { IndustryCategory, IndustryId, IndustryState, StockHolding } from '@/game/types';
@@ -16,7 +17,31 @@ export function MarketPanel() {
   const buyStock = useGame((s) => s.buyStockAction);
   const sellStock = useGame((s) => s.sellStockAction);
 
+  const highlightedIndustry = useUI((s) => s.highlightedIndustry);
+  const highlightToken = useUI((s) => s.highlightToken);
+  const clearHighlight = useUI((s) => s.clearHighlight);
+
   const [collapsed, setCollapsed] = useState<Record<IndustryCategory, boolean>>({} as any);
+
+  useEffect(() => {
+    if (!highlightedIndustry) return;
+    const cat = INDUSTRY_CATEGORY[highlightedIndustry];
+    setCollapsed((c) => ({ ...c, [cat]: false }));
+    const t = setTimeout(() => {
+      const el = document.getElementById(`stock-${highlightedIndustry}`);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        el.classList.add('ring-2', 'ring-primary', 'ring-offset-2', 'ring-offset-background');
+        setTimeout(() => {
+          el.classList.remove('ring-2', 'ring-primary', 'ring-offset-2', 'ring-offset-background');
+          clearHighlight();
+        }, 2500);
+      }
+    }, 80);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [highlightedIndustry, highlightToken]);
+
 
   const divPerMin = Object.entries(holdings).reduce((sum, [id, h]) => {
     if (!h || h.shares === 0) return sum;
@@ -173,7 +198,7 @@ function StockCard({
   const stroke = up ? 'hsl(var(--success))' : 'hsl(var(--destructive))';
 
   return (
-    <div className="rounded-xl border border-border/60 bg-card-gradient p-3">
+    <div id={`stock-${i.id}`} className="rounded-xl border border-border/60 bg-card-gradient p-3 transition-shadow">
       <div className="flex items-center justify-between gap-2">
         <div className="flex min-w-0 items-center gap-1.5">
           <div className="truncate font-display text-sm font-semibold">{i.name}</div>

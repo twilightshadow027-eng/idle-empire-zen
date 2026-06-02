@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { BusinessId, GameState, IndustryId } from './types';
-import { buyOrUpgrade, buyStock, buyUpgrade, calculateOfflineEarnings, collectBusiness, claimDailyReward, claimQuest, createInitialState, loadState, saveState, sellStock, tick, spinWheel } from './engine';
+import { buyOrUpgrade, buyStock, buyUpgrade, calculateOfflineEarnings, collectBusiness, claimDailyReward, claimQuest, createInitialState, loadState, saveState, sellStock, tick, spinWheel, withTx } from './engine';
 import { EMPLOYEE_NAMES } from './config';
 
 interface FloatingNumber { id: number; amount: number; x: number; y: number; }
@@ -95,30 +95,40 @@ export const useGame = create<Store>((set, get) => ({
       salary: base,
       hiredAt: Date.now(),
     };
-    set({ state: { ...s, money: s.money - base, employees: [...s.employees, emp] } });
+    const next: GameState = { ...s, money: s.money - base, employees: [...s.employees, emp] };
+    set({ state: withTx(next, 'hire', `Hired ${role}: ${name}`, -base) });
   },
 
   fireEmployee: (id) => {
     const s = get().state;
     const emp = s.employees.find((e) => e.id === id);
+    if (!emp) return;
     let businesses = s.businesses;
-    if (emp?.assignedTo) {
+    if (emp.assignedTo) {
       businesses = { ...businesses, [emp.assignedTo]: { ...businesses[emp.assignedTo], hasManager: false } };
     }
-    set({ state: { ...s, employees: s.employees.filter((e) => e.id !== id), businesses } });
+    const next: GameState = { ...s, employees: s.employees.filter((e) => e.id !== id), businesses };
+    set({ state: withTx(next, 'fire', `Fired ${emp.role}: ${emp.name}`, 0) });
   },
 
   assignManager: (employeeId, businessId) => {
     const s = get().state;
     const emp = s.employees.find((e) => e.id === employeeId);
     if (!emp || emp.role !== 'Manager') return;
-    // clear other manager on this business
+    const prevBiz = emp.assignedTo;
+    // Clear another manager already on target, plus this manager's previous business.
     const employees = s.employees.map((e) => {
       if (e.id === employeeId) return { ...e, assignedTo: businessId };
       if (e.assignedTo === businessId && e.role === 'Manager') return { ...e, assignedTo: undefined };
       return e;
     });
-    const businesses = { ...s.businesses, [businessId]: { ...s.businesses[businessId], hasManager: true } };
+    const businesses = {
+      ...s.businesses,
+      [businessId]: { ...s.businesses[businessId], hasManager: true },
+      ...(prevBiz && prevBiz !== businessId
+        ? { [prevBiz]: { ...s.businesses[prevBiz], hasManager: false } }
+        : {}),
+    };
     set({ state: { ...s, employees, businesses } });
   },
 
@@ -126,21 +136,19 @@ export const useGame = create<Store>((set, get) => ({
     const s = get().state;
     if (s.totalEarned < 1_000_000) return;
     const pts = Math.floor(Math.sqrt(s.totalEarned / 1_000_000));
-    // Fresh world: reset businesses, upgrades, employees, market, holdings, boosts, events, quests.
-    // Keep: prestige points (+earned), clan identity, daily-claim cadence.
     const fresh = createInitialState();
-    set({
-      state: {
-        ...fresh,
-        money: 100,
-        prestigePoints: s.prestigePoints + pts,
-        clan: s.clan,
-        lastClaimedDate: s.lastClaimedDate,
-        claimStreak: s.claimStreak,
-        lastWheelSpin: s.lastWheelSpin,
-        lastTick: Date.now(),
-      },
-    });
+    const reset: GameState = {
+      ...fresh,
+      money: 100,
+      prestigePoints: s.prestigePoints + pts,
+      clan: s.clan,
+      lastClaimedDate: s.lastClaimedDate,
+      claimStreak: s.claimStreak,
+      lastWheelSpin: s.lastWheelSpin,
+      lastTick: Date.now(),
+      transactions: s.transactions, // keep ledger history through prestige
+    };
+    set({ state: withTx(reset, 'prestige', `Prestige reset — +${pts} prestige`, 0) });
   },
 
   claimDailyReward: () => set({ state: claimDailyReward(get().state) }),
