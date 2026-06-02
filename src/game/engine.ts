@@ -149,31 +149,47 @@ export function getGlobalMultipliers(s: GameState) {
 }
 
 export function tick(state: GameState, dtSec: number): { state: GameState; earned: { id: BusinessId; amount: number }[] } {
-  const next = { ...state, businesses: { ...state.businesses } };
+  // Deep-clone mutable sub-state so we don't mutate the previous reference.
+  const next: GameState = {
+    ...state,
+    businesses: Object.fromEntries(
+      Object.entries(state.businesses).map(([k, v]) => [k, { ...v }])
+    ) as Record<BusinessId, BusinessState>,
+    industries: Object.fromEntries(
+      Object.entries(state.industries).map(([k, v]) => [k, { ...v }])
+    ) as Record<IndustryId, IndustryState>,
+    transactions: state.transactions ?? [],
+  };
   const { income: incMult, speed, perBiz } = getGlobalMultipliers(next);
   const earned: { id: BusinessId; amount: number }[] = [];
+  // Aggregate manager auto-collect per business per tick for the ledger.
+  const autoAgg: Partial<Record<BusinessId, number>> = {};
 
   BUSINESSES.forEach((def) => {
     const b = next.businesses[def.id];
     if (!b.owned || b.level === 0) return;
     const cycle = def.productionTime / speed;
     b.progress += dtSec / cycle;
-    while (b.progress >= 1) {
+    let safety = 0;
+    while (b.progress >= 1 && safety++ < 50) {
       b.progress -= 1;
       if (b.hasManager) {
         const amt = businessIncome(def.baseIncome, b.level, incMult, perBiz[def.id] ?? 1);
         next.money += amt;
         next.totalEarned += amt;
         earned.push({ id: def.id, amount: amt });
+        autoAgg[def.id] = (autoAgg[def.id] ?? 0) + amt;
       } else {
-        // Stop at 1, await manual collect
         b.progress = 1;
         break;
       }
     }
   });
+  (Object.keys(autoAgg) as BusinessId[]).forEach((id) => {
+    const def = BUSINESSES.find((b) => b.id === id)!;
+    pushTx(next, 'auto', `${def.icon} ${def.name} auto-collect`, autoAgg[id]!);
+  });
 
-  // Clean expired boosts & events
   const now = Date.now();
   if (next.activeBoosts.some((b) => b.expiresAt <= now)) {
     next.activeBoosts = next.activeBoosts.filter((b) => b.expiresAt > now);
@@ -182,7 +198,6 @@ export function tick(state: GameState, dtSec: number): { state: GameState; earne
     next.events = next.events.filter((e) => e.expiresAt > now);
   }
 
-  // Spawn a new market event occasionally (avg ~1 per 35s) — caps at 4 concurrent.
   if ((next.events?.length ?? 0) < 4 && Math.random() < dtSec / 35) {
     const pick = MARKET_EVENT_POOL[Math.floor(Math.random() * MARKET_EVENT_POOL.length)];
     next.events = [...(next.events ?? []), {
@@ -193,35 +208,28 @@ export function tick(state: GameState, dtSec: number): { state: GameState; earne
       trendBoost: pick.trendBoost,
       expiresAt: now + pick.durationMs,
     }];
+    pushTx(next, 'event', `${pick.icon} ${pick.label} (${INDUSTRY_NAMES[pick.industryId]})`, 0);
   }
 
-  // Index event biases by industry
   const eventBias: Partial<Record<IndustryId, number>> = {};
   (next.events ?? []).forEach((e) => {
     eventBias[e.industryId] = (eventBias[e.industryId] ?? 0) + e.trendBoost;
   });
 
-  // Drift market prices — mostly mean-revert to basePrice within ±20–40%, rare ±80% swings.
   (Object.keys(next.industries) as IndustryId[]).forEach((id) => {
     const ind = next.industries[id];
     const vol = INDUSTRY_VOLATILITY[id] ?? 1;
-    const deviation = (ind.price - ind.basePrice) / ind.basePrice; // current % away from base
-    // Mean-revert trend: pull harder the further we are from base.
+    const deviation = (ind.price - ind.basePrice) / ind.basePrice;
     const reversion = -deviation * 0.04 * dtSec;
-    // Gentle random walk
     ind.trend += (Math.random() - 0.5) * 0.03 * vol * dtSec + reversion;
-    // Event push
     if (eventBias[id]) ind.trend += eventBias[id]! * dtSec * 0.5;
-    // Very rare big shock — can push toward ±80%
     if (Math.random() < dtSec * 0.0015) {
       ind.trend += (Math.random() - 0.5) * 1.8 * vol;
     }
     ind.trend = Math.max(-1, Math.min(1, ind.trend * 0.992));
-    // Price evolves with trend + tiny noise
     const drift = ind.trend * 0.0025 * vol * dtSec * 60;
     const noise = (Math.random() - 0.5) * 0.0012 * vol;
     let nextPrice = ind.price * (1 + drift + noise);
-    // Hard clamp: ±80% from base
     const lo = ind.basePrice * 0.2;
     const hi = ind.basePrice * 1.8;
     if (nextPrice < lo) { nextPrice = lo; ind.trend = Math.max(ind.trend, 0.05); }
@@ -232,8 +240,7 @@ export function tick(state: GameState, dtSec: number): { state: GameState; earne
     }
   });
 
-
-  // Dividends — accrue cash each tick from stock holdings.
+  // Dividends — log aggregate roughly once per minute.
   let dividendTotal = 0;
   (Object.keys(next.holdings) as IndustryId[]).forEach((id) => {
     const h = next.holdings[id];
@@ -247,6 +254,15 @@ export function tick(state: GameState, dtSec: number): { state: GameState; earne
     next.money += dividendTotal;
     next.totalEarned += dividendTotal;
     next.totalDividends += dividendTotal;
+    if (now - (next.lastDividendLogTs ?? 0) >= 60_000) {
+      const since = next.lastDividendLogTs ? (now - next.lastDividendLogTs) / 1000 : 60;
+      // Estimate batch by per-second rate
+      const batch = dividendTotal * (since / dtSec);
+      pushTx(next, 'dividend', `Dividend payouts (last ${Math.round(since)}s)`, batch);
+      next.lastDividendLogTs = now;
+    } else if (next.lastDividendLogTs === 0) {
+      next.lastDividendLogTs = now;
+    }
   }
 
   return { state: next, earned };
