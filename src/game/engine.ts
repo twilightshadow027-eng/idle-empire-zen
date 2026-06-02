@@ -472,7 +472,7 @@ export function spinWheel(state: GameState, empNames: string[], forcedResult?: t
     default:
       break;
   }
-  return next;
+  return withTx(next, 'wheel', `Wheel: ${result.icon} ${result.label}`, result.type === 'cash' || result.type === 'mega_cash' ? result.value : 0);
 }
 
 
@@ -485,12 +485,13 @@ export function buyStock(state: GameState, id: IndustryId, shares: number): Game
   const existing = state.holdings[id] ?? { shares: 0, avgCost: 0 };
   const newShares = existing.shares + shares;
   const newAvg = (existing.avgCost * existing.shares + cost) / newShares;
-  return {
+  const next = {
     ...state,
     money: state.money - cost,
     totalInvested: state.totalInvested + cost,
     holdings: { ...state.holdings, [id]: { shares: newShares, avgCost: newAvg } },
   };
+  return withTx(next, 'market_buy', `Buy ${shares} ${INDUSTRY_NAMES[id]} @ $${ind.price.toFixed(2)}`, -cost);
 }
 
 export function sellStock(state: GameState, id: IndustryId, shares: number): GameState {
@@ -501,7 +502,7 @@ export function sellStock(state: GameState, id: IndustryId, shares: number): Gam
   const proceeds = ind.price * shares;
   const remaining = existing.shares - shares;
   const realized = proceeds - existing.avgCost * shares;
-  return {
+  const next = {
     ...state,
     money: state.money + proceeds,
     totalEarned: state.totalEarned + Math.max(0, realized),
@@ -511,4 +512,5 @@ export function sellStock(state: GameState, id: IndustryId, shares: number): Gam
       [id]: { shares: remaining, avgCost: remaining === 0 ? 0 : existing.avgCost },
     },
   };
+  return withTx(next, 'market_sell', `Sell ${shares} ${INDUSTRY_NAMES[id]} @ $${ind.price.toFixed(2)} (P/L ${realized >= 0 ? '+' : ''}${formatMoney(realized)})`, proceeds);
 }
