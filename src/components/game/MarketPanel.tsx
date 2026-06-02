@@ -17,7 +17,31 @@ export function MarketPanel() {
   const buyStock = useGame((s) => s.buyStockAction);
   const sellStock = useGame((s) => s.sellStockAction);
 
+  const highlightedIndustry = useUI((s) => s.highlightedIndustry);
+  const highlightToken = useUI((s) => s.highlightToken);
+  const clearHighlight = useUI((s) => s.clearHighlight);
+
   const [collapsed, setCollapsed] = useState<Record<IndustryCategory, boolean>>({} as any);
+
+  useEffect(() => {
+    if (!highlightedIndustry) return;
+    const cat = INDUSTRY_CATEGORY[highlightedIndustry];
+    setCollapsed((c) => ({ ...c, [cat]: false }));
+    const t = setTimeout(() => {
+      const el = document.getElementById(`stock-${highlightedIndustry}`);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        el.classList.add('ring-2', 'ring-primary', 'ring-offset-2', 'ring-offset-background');
+        setTimeout(() => {
+          el.classList.remove('ring-2', 'ring-primary', 'ring-offset-2', 'ring-offset-background');
+          clearHighlight();
+        }, 2500);
+      }
+    }, 80);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [highlightedIndustry, highlightToken]);
+
 
   const divPerMin = Object.entries(holdings).reduce((sum, [id, h]) => {
     if (!h || h.shares === 0) return sum;
