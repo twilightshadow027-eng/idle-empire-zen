@@ -95,30 +95,40 @@ export const useGame = create<Store>((set, get) => ({
       salary: base,
       hiredAt: Date.now(),
     };
-    set({ state: { ...s, money: s.money - base, employees: [...s.employees, emp] } });
+    const next: GameState = { ...s, money: s.money - base, employees: [...s.employees, emp] };
+    set({ state: withTx(next, 'hire', `Hired ${role}: ${name}`, -base) });
   },
 
   fireEmployee: (id) => {
     const s = get().state;
     const emp = s.employees.find((e) => e.id === id);
+    if (!emp) return;
     let businesses = s.businesses;
-    if (emp?.assignedTo) {
+    if (emp.assignedTo) {
       businesses = { ...businesses, [emp.assignedTo]: { ...businesses[emp.assignedTo], hasManager: false } };
     }
-    set({ state: { ...s, employees: s.employees.filter((e) => e.id !== id), businesses } });
+    const next: GameState = { ...s, employees: s.employees.filter((e) => e.id !== id), businesses };
+    set({ state: withTx(next, 'fire', `Fired ${emp.role}: ${emp.name}`, 0) });
   },
 
   assignManager: (employeeId, businessId) => {
     const s = get().state;
     const emp = s.employees.find((e) => e.id === employeeId);
     if (!emp || emp.role !== 'Manager') return;
-    // clear other manager on this business
+    const prevBiz = emp.assignedTo;
+    // Clear another manager already on target, plus this manager's previous business.
     const employees = s.employees.map((e) => {
       if (e.id === employeeId) return { ...e, assignedTo: businessId };
       if (e.assignedTo === businessId && e.role === 'Manager') return { ...e, assignedTo: undefined };
       return e;
     });
-    const businesses = { ...s.businesses, [businessId]: { ...s.businesses[businessId], hasManager: true } };
+    const businesses = {
+      ...s.businesses,
+      [businessId]: { ...s.businesses[businessId], hasManager: true },
+      ...(prevBiz && prevBiz !== businessId
+        ? { [prevBiz]: { ...s.businesses[prevBiz], hasManager: false } }
+        : {}),
+    };
     set({ state: { ...s, employees, businesses } });
   },
 
