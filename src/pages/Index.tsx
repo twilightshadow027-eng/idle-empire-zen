@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useGame } from '@/game/store';
+import { useUI } from '@/game/uiStore';
 import { TopBar } from '@/components/game/TopBar';
 import { OfficeBuilding } from '@/components/game/OfficeBuilding';
 import { BusinessesPanel } from '@/components/game/BusinessesPanel';
@@ -10,13 +11,13 @@ import { ClanPanel } from '@/components/game/ClanPanel';
 import { MissionsPanel } from '@/components/game/MissionsPanel';
 import { DailyRewardsPanel } from '@/components/game/DailyRewardsPanel';
 import { SpinWheelPanel } from '@/components/game/SpinWheelPanel';
+import { TransactionsPanel } from '@/components/game/TransactionsPanel';
+import { SettingsPanel } from '@/components/game/SettingsPanel';
 import { OfflineModal } from '@/components/game/OfflineModal';
-import { Briefcase, ChevronUp, Users, LineChart, Crown, RotateCcw, Gift, Dices } from 'lucide-react';
+import { Briefcase, ChevronUp, Users, LineChart, Crown, Gift, Dices, ScrollText, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-type Tab = 'businesses' | 'upgrades' | 'employees' | 'market' | 'clan' | 'rewards' | 'wheel';
-
-const TABS: { id: Tab; label: string; icon: typeof Briefcase }[] = [
+const TABS = [
   { id: 'businesses', label: 'Biz', icon: Briefcase },
   { id: 'upgrades', label: 'Upgrades', icon: ChevronUp },
   { id: 'employees', label: 'Staff', icon: Users },
@@ -24,27 +25,28 @@ const TABS: { id: Tab; label: string; icon: typeof Briefcase }[] = [
   { id: 'clan', label: 'Clan', icon: Crown },
   { id: 'rewards', label: 'Daily', icon: Gift },
   { id: 'wheel', label: 'Wheel', icon: Dices },
-];
+  { id: 'ledger', label: 'Ledger', icon: ScrollText },
+  { id: 'settings', label: 'Settings', icon: Settings },
+] as const;
 
 const Index = () => {
-  const [tab, setTab] = useState<Tab>('businesses');
+  const tab = useUI((s) => s.tab);
+  const setTab = useUI((s) => s.setTab);
   const init = useGame((s) => s.init);
   const doTick = useGame((s) => s.doTick);
-  const reset = useGame((s) => s.reset);
 
   useEffect(() => { init(); }, [init]);
 
+  // 5 Hz tick keeps gameplay smooth without storming the chart-heavy market with 60 re-renders/s.
   useEffect(() => {
     let last = performance.now();
-    let raf = 0;
-    const loop = (t: number) => {
-      const dt = Math.min((t - last) / 1000, 0.5);
-      last = t;
+    const id = setInterval(() => {
+      const now = performance.now();
+      const dt = Math.min((now - last) / 1000, 0.5);
+      last = now;
       doTick(dt);
-      raf = requestAnimationFrame(loop);
-    };
-    raf = requestAnimationFrame(loop);
-    return () => cancelAnimationFrame(raf);
+    }, 200);
+    return () => clearInterval(id);
   }, [doTick]);
 
   return (
@@ -56,7 +58,6 @@ const Index = () => {
         <div className="flex flex-col gap-4">
           <OfficeBuilding />
 
-          {/* Mobile missions */}
           <div className="lg:hidden">
             <MissionsPanel />
           </div>
@@ -69,17 +70,11 @@ const Index = () => {
             {tab === 'clan' && <ClanPanel />}
             {tab === 'rewards' && <DailyRewardsPanel />}
             {tab === 'wheel' && <SpinWheelPanel />}
+            {tab === 'ledger' && <TransactionsPanel />}
+            {tab === 'settings' && <SettingsPanel />}
           </section>
-
-          <button
-            onClick={() => { if (confirm('Reset all progress?')) reset(); }}
-            className="mx-auto flex items-center gap-1.5 text-xs text-muted-foreground hover:text-destructive"
-          >
-            <RotateCcw className="h-3 w-3" /> Reset Save
-          </button>
         </div>
 
-        {/* Desktop side panel */}
         <aside className="hidden lg:block">
           <div className="sticky top-32">
             <MissionsPanel />
@@ -87,9 +82,8 @@ const Index = () => {
         </aside>
       </div>
 
-      {/* Bottom tab bar */}
       <nav className="sticky bottom-0 z-30 border-t border-border/60 bg-background/90 px-2 pb-[env(safe-area-inset-bottom)] pt-1 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-md items-center justify-around">
+        <div className="mx-auto flex max-w-2xl items-center justify-between gap-0.5 overflow-x-auto">
           {TABS.map((t) => {
             const Icon = t.icon;
             const active = tab === t.id;
@@ -98,17 +92,17 @@ const Index = () => {
                 key={t.id}
                 onClick={() => setTab(t.id)}
                 className={cn(
-                  'flex flex-1 flex-col items-center gap-0.5 rounded-lg px-2 py-2 transition-all',
+                  'flex shrink-0 flex-1 flex-col items-center gap-0.5 rounded-lg px-1.5 py-2 transition-all',
                   active ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
                 )}
               >
                 <div className={cn(
-                  'flex h-9 w-9 items-center justify-center rounded-lg transition-all',
+                  'flex h-8 w-8 items-center justify-center rounded-lg transition-all',
                   active && 'bg-primary/15 shadow-[0_0_15px_hsl(var(--primary)/0.4)]'
                 )}>
                   <Icon className="h-4 w-4" />
                 </div>
-                <span className="font-display text-[10px] font-bold uppercase tracking-wider">{t.label}</span>
+                <span className="font-display text-[9px] font-bold uppercase tracking-wider">{t.label}</span>
               </button>
             );
           })}
