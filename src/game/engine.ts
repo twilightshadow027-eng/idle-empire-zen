@@ -95,6 +95,8 @@ export function loadState(): GameState {
       totalDividends: parsed.totalDividends ?? 0,
       events: parsed.events ?? [],
       questsClaimed: parsed.questsClaimed ?? {},
+      transactions: parsed.transactions ?? [],
+      lastDividendLogTs: parsed.lastDividendLogTs ?? 0,
     };
   } catch {
     return createInitialState();
