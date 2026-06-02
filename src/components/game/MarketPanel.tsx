@@ -198,7 +198,7 @@ function StockCard({
   const stroke = up ? 'hsl(var(--success))' : 'hsl(var(--destructive))';
 
   return (
-    <div className="rounded-xl border border-border/60 bg-card-gradient p-3">
+    <div id={`stock-${i.id}`} className="rounded-xl border border-border/60 bg-card-gradient p-3 transition-shadow">
       <div className="flex items-center justify-between gap-2">
         <div className="flex min-w-0 items-center gap-1.5">
           <div className="truncate font-display text-sm font-semibold">{i.name}</div>
