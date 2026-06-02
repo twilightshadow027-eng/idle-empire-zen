@@ -397,7 +397,7 @@ export function claimDailyReward(state: GameState): GameState {
   if ('prestige' in reward && reward.prestige) {
     next.prestigePoints = next.prestigePoints + reward.prestige;
   }
-  return next;
+  return withTx(next, 'daily', `${reward.icon} Daily Reward (Day ${streak})`, reward.money);
 }
 
 export function canSpin(state: GameState): boolean {
