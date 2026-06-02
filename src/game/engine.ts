@@ -1,5 +1,22 @@
 import { BUSINESSES, COST_GROWTH, UPGRADES, INDUSTRY_NAMES, INDUSTRY_VOLATILITY, INDUSTRY_DIVIDEND, DAILY_REWARDS, WHEEL_SEGMENTS, WHEEL_COOLDOWN_MS, MARKET_EVENT_POOL, QUESTS } from './config';
-import { BusinessId, BusinessState, GameState, IndustryId, IndustryState, StockHolding } from './types';
+import { BusinessId, BusinessState, GameState, IndustryId, IndustryState, StockHolding, Transaction, TxKind } from './types';
+
+const TX_CAP = 250;
+
+function newTx(kind: TxKind, label: string, amount: number): Transaction {
+  return { id: crypto.randomUUID(), ts: Date.now(), kind, label, amount };
+}
+
+/** Immutable: return new state with tx prepended. */
+export function withTx(s: GameState, kind: TxKind, label: string, amount: number): GameState {
+  return { ...s, transactions: [newTx(kind, label, amount), ...(s.transactions ?? [])].slice(0, TX_CAP) };
+}
+
+/** Mutating: only safe on a freshly-cloned state (e.g. inside tick). */
+function pushTx(s: GameState, kind: TxKind, label: string, amount: number) {
+  s.transactions = [newTx(kind, label, amount), ...(s.transactions ?? [])].slice(0, TX_CAP);
+}
+
 
 export const STORAGE_KEY = 'idle-empire-save-v1';
 
