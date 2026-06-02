@@ -48,10 +48,7 @@ export function TopBar() {
           )}
           {wheelAvailable && (
             <button
-              onClick={() => {
-                const wheelBtn = Array.from(document.querySelectorAll('nav button')).find(b => b.textContent?.includes('Wheel')) as HTMLElement | undefined;
-                wheelBtn?.click();
-              }}
+              onClick={() => setTab('wheel')}
               className={cn(
                 'relative flex items-center gap-1.5 rounded-lg border border-accent/60 bg-accent/15 px-2.5 py-1.5 animate-pulse',
               )}
