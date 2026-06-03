@@ -1,10 +1,10 @@
-import { useState, useMemo, useEffect, useRef } from 'react';
-import { Area, AreaChart, ResponsiveContainer, YAxis } from 'recharts';
+import { useState, useMemo, useEffect } from 'react';
+import { Area, AreaChart, Line, ComposedChart, ResponsiveContainer, YAxis } from 'recharts';
 import { useGame } from '@/game/store';
 import { useUI } from '@/game/uiStore';
 import { formatMoney } from '@/game/engine';
 import { INDUSTRY_DIVIDEND, INDUSTRY_CATEGORY, CATEGORY_ORDER, CATEGORY_LABELS } from '@/game/config';
-import type { IndustryCategory, IndustryId, IndustryState, StockHolding } from '@/game/types';
+import type { IndustryCategory, IndustryId, IndustryState, StockHolding, Timeframe } from '@/game/types';
 import { TrendingDown, TrendingUp, Wallet, Briefcase, Coins, ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
