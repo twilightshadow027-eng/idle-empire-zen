@@ -236,7 +236,7 @@ export function tick(state: GameState, dtSec: number): { state: GameState; earne
     if (nextPrice > hi) { nextPrice = hi; ind.trend = Math.min(ind.trend, -0.05); }
     ind.price = nextPrice;
     if (Math.random() < dtSec * 1.0) {
-      ind.history = [...ind.history.slice(-119), ind.price];
+      ind.history = [...ind.history.slice(-299), ind.price];
     }
   });
 
