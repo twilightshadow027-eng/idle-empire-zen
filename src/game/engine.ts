@@ -528,5 +528,5 @@ export function sellStock(state: GameState, id: IndustryId, shares: number): Gam
       [id]: { shares: remaining, avgCost: remaining === 0 ? 0 : existing.avgCost },
     },
   };
-  return withTx(next, 'market_sell', `Sell ${shares} ${INDUSTRY_NAMES[id]} @ $${ind.price.toFixed(2)} (P/L ${realized >= 0 ? '+' : ''}${formatMoney(realized)})`, proceeds);
+  return withTx(next, 'market_sell', `Sell ${shares} ${INDUSTRY_NAMES[id]} @ $${unit.toFixed(2)} (P/L ${realized >= 0 ? '+' : ''}${formatMoney(realized)})`, proceeds);
 }
