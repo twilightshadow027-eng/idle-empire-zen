@@ -15,6 +15,7 @@ interface Store {
   buy: (id: BusinessId) => void;
   buyUpgradeAction: (id: string) => void;
   hireEmployee: (role: import('./types').EmployeeRole) => void;
+  trainEmployee: (id: string) => void;
   fireEmployee: (id: string) => void;
   assignManager: (employeeId: string, businessId: BusinessId) => void;
   prestige: () => void;
