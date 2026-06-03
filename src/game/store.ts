@@ -94,9 +94,26 @@ export const useGame = create<Store>((set, get) => ({
       productivity: 30 + Math.floor(Math.random() * 70),
       salary: base,
       hiredAt: Date.now(),
+      level: 1,
+      trainingCost: Math.round(base * 0.4),
     };
     const next: GameState = { ...s, money: s.money - base, employees: [...s.employees, emp] };
     set({ state: withTx(next, 'hire', `Hired ${role}: ${name}`, -base) });
+  },
+
+  trainEmployee: (id: string) => {
+    const s = get().state;
+    const emp = s.employees.find((e) => e.id === id);
+    if (!emp || s.money < emp.trainingCost) return;
+    const productivityGain = 8 + Math.floor(Math.random() * 6);
+    const newProductivity = Math.min(100, emp.productivity + productivityGain);
+    const newLevel = emp.level + 1;
+    const newTrainingCost = Math.round(emp.trainingCost * 1.7);
+    const employees = s.employees.map((e) =>
+      e.id === id ? { ...e, productivity: newProductivity, level: newLevel, trainingCost: newTrainingCost } : e
+    );
+    const next: GameState = { ...s, money: s.money - emp.trainingCost, employees };
+    set({ state: withTx(next, 'hire', `Trained ${emp.name} → Lv${newLevel}`, -emp.trainingCost) });
   },
 
   fireEmployee: (id) => {
