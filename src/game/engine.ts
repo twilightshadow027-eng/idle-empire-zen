@@ -461,6 +461,8 @@ export function spinWheel(state: GameState, empNames: string[], forcedResult?: t
         productivity: 30 + Math.floor(Math.random() * 70),
         salary: base,
         hiredAt: now,
+        level: 1,
+        trainingCost: Math.round(base * 0.4),
       };
       next.employees = [...next.employees, emp];
       break;
