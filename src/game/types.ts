@@ -72,10 +72,11 @@ export interface Quest {
 }
 
 export type UpgradeId =
-  | 'speed1' | 'speed2'
-  | 'efficiency1' | 'efficiency2'
-  | 'automation1'
-  | 'worker1';
+  | 'speed1' | 'speed2' | 'speed3'
+  | 'efficiency1' | 'efficiency2' | 'efficiency3'
+  | 'automation1' | 'automation2'
+  | 'worker1' | 'worker2'
+  | 'market1' | 'market2';
 
 export interface UpgradeDef {
   id: UpgradeId;
