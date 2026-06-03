@@ -100,6 +100,8 @@ export interface Employee {
   salary: number;
   assignedTo?: BusinessId;
   hiredAt: number;
+  level: number;          // training level
+  trainingCost: number;   // cost for next training
 }
 
 export interface ClanState {
