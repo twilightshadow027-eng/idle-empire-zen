@@ -1,5 +1,7 @@
 // Core game types
-export type BusinessId = 'lemonade' | 'grocery' | 'coffee' | 'delivery' | 'logistics' | 'tech';
+export type BusinessId =
+  | 'lemonade' | 'grocery' | 'coffee' | 'delivery' | 'logistics' | 'tech'
+  | 'casino' | 'oilrig' | 'bank' | 'biotech_lab' | 'space_station';
 
 export interface BusinessDef {
   id: BusinessId;
@@ -49,6 +51,8 @@ export interface IndustryState {
   history: number[];
 }
 
+export type Timeframe = '1m' | '5m' | '15m' | '1h';
+
 export interface MarketEvent {
   id: string;
   label: string;
@@ -68,10 +72,11 @@ export interface Quest {
 }
 
 export type UpgradeId =
-  | 'speed1' | 'speed2'
-  | 'efficiency1' | 'efficiency2'
-  | 'automation1'
-  | 'worker1';
+  | 'speed1' | 'speed2' | 'speed3'
+  | 'efficiency1' | 'efficiency2' | 'efficiency3'
+  | 'automation1' | 'automation2'
+  | 'worker1' | 'worker2'
+  | 'market1' | 'market2';
 
 export interface UpgradeDef {
   id: UpgradeId;
@@ -95,6 +100,8 @@ export interface Employee {
   salary: number;
   assignedTo?: BusinessId;
   hiredAt: number;
+  level: number;          // training level
+  trainingCost: number;   // cost for next training
 }
 
 export interface ClanState {

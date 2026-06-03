@@ -4,27 +4,32 @@ export const COST_GROWTH = 1.15;
 export const TICK_MS = 100;
 
 export const BUSINESSES: BusinessDef[] = [
-  { id: 'lemonade', name: 'Lemonade Stand', icon: '🍋', baseCost: 10, baseIncome: 1, productionTime: 1.2, industry: 'food', unlockAt: 0 },
-  { id: 'grocery', name: 'Grocery Shop', icon: '🛒', baseCost: 250, baseIncome: 18, productionTime: 3, industry: 'food', unlockAt: 100 },
-  { id: 'coffee', name: 'Coffee Chain', icon: '☕', baseCost: 2_500, baseIncome: 120, productionTime: 6, industry: 'food', unlockAt: 1_000 },
-  { id: 'delivery', name: 'Delivery Co.', icon: '🚚', baseCost: 25_000, baseIncome: 950, productionTime: 10, industry: 'transport', unlockAt: 10_000 },
-  { id: 'logistics', name: 'Logistics HQ', icon: '🏭', baseCost: 250_000, baseIncome: 8_500, productionTime: 18, industry: 'transport', unlockAt: 100_000 },
-  { id: 'tech', name: 'Tech Startup', icon: '💻', baseCost: 2_500_000, baseIncome: 75_000, productionTime: 30, industry: 'tech', unlockAt: 1_000_000 },
+  { id: 'lemonade',     name: 'Lemonade Stand', icon: '🍋', baseCost: 10,             baseIncome: 1,           productionTime: 1.2, industry: 'food',       unlockAt: 0 },
+  { id: 'grocery',      name: 'Grocery Shop',   icon: '🛒', baseCost: 250,            baseIncome: 18,          productionTime: 3,   industry: 'food',       unlockAt: 100 },
+  { id: 'coffee',       name: 'Coffee Chain',   icon: '☕', baseCost: 2_500,          baseIncome: 120,         productionTime: 6,   industry: 'food',       unlockAt: 1_000 },
+  { id: 'delivery',     name: 'Delivery Co.',   icon: '🚚', baseCost: 25_000,         baseIncome: 950,         productionTime: 10,  industry: 'transport',  unlockAt: 10_000 },
+  { id: 'casino',       name: 'Casino',         icon: '🎰', baseCost: 100_000,        baseIncome: 3_800,       productionTime: 14,  industry: 'luxury',     unlockAt: 40_000 },
+  { id: 'logistics',    name: 'Logistics HQ',   icon: '🏭', baseCost: 250_000,        baseIncome: 8_500,       productionTime: 18,  industry: 'transport',  unlockAt: 100_000 },
+  { id: 'oilrig',       name: 'Oil Rig',        icon: '🛢️', baseCost: 750_000,        baseIncome: 22_000,      productionTime: 22,  industry: 'oil',        unlockAt: 300_000 },
+  { id: 'bank',         name: 'Investment Bank',icon: '🏦', baseCost: 1_200_000,      baseIncome: 38_000,      productionTime: 25,  industry: 'banks',      unlockAt: 500_000 },
+  { id: 'tech',         name: 'Tech Startup',   icon: '💻', baseCost: 2_500_000,      baseIncome: 75_000,      productionTime: 30,  industry: 'tech',       unlockAt: 1_000_000 },
+  { id: 'biotech_lab',  name: 'Biotech Lab',    icon: '🧬', baseCost: 12_000_000,     baseIncome: 320_000,     productionTime: 36,  industry: 'biotech',    unlockAt: 5_000_000 },
+  { id: 'space_station',name: 'Space Station',  icon: '🛰️', baseCost: 80_000_000,     baseIncome: 1_800_000,   productionTime: 45,  industry: 'space',      unlockAt: 30_000_000 },
 ];
 
 export const UPGRADES: UpgradeDef[] = [
-  { id: 'speed1', name: 'Faster Workers', description: '+25% global production speed', cost: 5_000, category: 'speed',
-    effect: { type: 'globalSpeed', value: 1.25 } },
-  { id: 'speed2', name: 'Logistics Network', description: '+50% global production speed', cost: 250_000, category: 'speed',
-    effect: { type: 'globalSpeed', value: 1.5 } },
-  { id: 'efficiency1', name: 'Lean Operations', description: '+50% global income', cost: 15_000, category: 'efficiency',
-    effect: { type: 'globalIncome', value: 1.5 } },
-  { id: 'efficiency2', name: 'AI Optimization', description: '×3 global income', cost: 750_000, category: 'efficiency',
-    effect: { type: 'globalIncome', value: 3 } },
-  { id: 'automation1', name: 'Auto-Collect Bots', description: 'Smoother passive income flow', cost: 50_000, category: 'automation',
-    effect: { type: 'globalIncome', value: 1.2 } },
-  { id: 'worker1', name: 'Worker Bonuses', description: '+40% income from food industry', cost: 35_000, category: 'worker',
-    effect: { type: 'businessIncome', value: 1.4, businessId: 'coffee' } },
+  { id: 'speed1',      name: 'Faster Workers',    description: '+25% global production speed',     cost: 5_000,      category: 'speed',      effect: { type: 'globalSpeed', value: 1.25 } },
+  { id: 'speed2',      name: 'Logistics Network', description: '+50% global production speed',     cost: 250_000,    category: 'speed',      effect: { type: 'globalSpeed', value: 1.5 } },
+  { id: 'speed3',      name: 'Quantum Workflow',  description: '×2 global production speed',       cost: 10_000_000, category: 'speed',      effect: { type: 'globalSpeed', value: 2 } },
+  { id: 'efficiency1', name: 'Lean Operations',   description: '+50% global income',               cost: 15_000,     category: 'efficiency', effect: { type: 'globalIncome', value: 1.5 } },
+  { id: 'efficiency2', name: 'AI Optimization',   description: '×3 global income',                 cost: 750_000,    category: 'efficiency', effect: { type: 'globalIncome', value: 3 } },
+  { id: 'efficiency3', name: 'Corporate Synergy', description: '×5 global income',                 cost: 50_000_000, category: 'efficiency', effect: { type: 'globalIncome', value: 5 } },
+  { id: 'automation1', name: 'Auto-Collect Bots', description: 'Smoother passive income flow',     cost: 50_000,     category: 'automation', effect: { type: 'globalIncome', value: 1.2 } },
+  { id: 'automation2', name: 'Drone Fleet',       description: '+40% income while idle',           cost: 2_500_000,  category: 'automation', effect: { type: 'globalIncome', value: 1.4 } },
+  { id: 'worker1',     name: 'Worker Bonuses',    description: '+40% income from Coffee Chain',    cost: 35_000,     category: 'worker',     effect: { type: 'businessIncome', value: 1.4, businessId: 'coffee' } },
+  { id: 'worker2',     name: 'Logistics Boost',   description: '×2 income from Logistics HQ',      cost: 1_500_000,  category: 'worker',     effect: { type: 'businessIncome', value: 2, businessId: 'logistics' } },
+  { id: 'market1',     name: 'Market Insights',   description: '+25% income from Investment Bank', cost: 4_000_000,  category: 'worker',     effect: { type: 'businessIncome', value: 1.25, businessId: 'bank' } },
+  { id: 'market2',     name: 'Orbital Manufacturing', description: '×2.5 income from Space Station', cost: 200_000_000, category: 'worker', effect: { type: 'businessIncome', value: 2.5, businessId: 'space_station' } },
 ];
 
 export const INDUSTRY_NAMES: Record<IndustryId, string> = {

@@ -34,7 +34,7 @@ export function createInitialState(): GameState {
       price: basePrice,
       basePrice,
       trend: (Math.random() - 0.5) * 0.4,
-      history: Array.from({ length: 20 }, () => basePrice * (0.92 + Math.random() * 0.16)),
+      history: Array.from({ length: 300 }, () => basePrice * (0.92 + Math.random() * 0.16)),
     };
   });
   return {
@@ -148,6 +148,15 @@ export function getGlobalMultipliers(s: GameState) {
   return { income, speed, perBiz };
 }
 
+/** Returns a multiplier applied to trade cost/proceeds. <1 for buy (discount), >1 for sell (bonus). */
+export function getNegotiatorDiscount(s: GameState): number {
+  const negs = s.employees.filter((e) => e.role === 'Negotiator');
+  if (negs.length === 0) return 0;
+  // sum productivity, level boosts; cap at 15%
+  const raw = negs.reduce((a, e) => a + (e.productivity / 100) * (1 + (e.level - 1) * 0.25), 0);
+  return Math.min(0.15, raw * 0.04);
+}
+
 export function tick(state: GameState, dtSec: number): { state: GameState; earned: { id: BusinessId; amount: number }[] } {
   // Deep-clone mutable sub-state so we don't mutate the previous reference.
   const next: GameState = {
@@ -235,8 +244,8 @@ export function tick(state: GameState, dtSec: number): { state: GameState; earne
     if (nextPrice < lo) { nextPrice = lo; ind.trend = Math.max(ind.trend, 0.05); }
     if (nextPrice > hi) { nextPrice = hi; ind.trend = Math.min(ind.trend, -0.05); }
     ind.price = nextPrice;
-    if (Math.random() < dtSec * 0.25) {
-      ind.history = [...ind.history.slice(-19), ind.price];
+    if (Math.random() < dtSec * 1.0) {
+      ind.history = [...ind.history.slice(-299), ind.price];
     }
   });
 
@@ -461,6 +470,8 @@ export function spinWheel(state: GameState, empNames: string[], forcedResult?: t
         productivity: 30 + Math.floor(Math.random() * 70),
         salary: base,
         hiredAt: now,
+        level: 1,
+        trainingCost: Math.round(base * 0.4),
       };
       next.employees = [...next.employees, emp];
       break;
@@ -480,7 +491,9 @@ export function spinWheel(state: GameState, empNames: string[], forcedResult?: t
 export function buyStock(state: GameState, id: IndustryId, shares: number): GameState {
   if (shares <= 0) return state;
   const ind = state.industries[id];
-  const cost = ind.price * shares;
+  const discount = getNegotiatorDiscount(state);
+  const unit = ind.price * (1 - discount);
+  const cost = unit * shares;
   if (state.money < cost) return state;
   const existing = state.holdings[id] ?? { shares: 0, avgCost: 0 };
   const newShares = existing.shares + shares;
@@ -491,7 +504,8 @@ export function buyStock(state: GameState, id: IndustryId, shares: number): Game
     totalInvested: state.totalInvested + cost,
     holdings: { ...state.holdings, [id]: { shares: newShares, avgCost: newAvg } },
   };
-  return withTx(next, 'market_buy', `Buy ${shares} ${INDUSTRY_NAMES[id]} @ $${ind.price.toFixed(2)}`, -cost);
+  const tag = discount > 0 ? ` (-${(discount * 100).toFixed(1)}% neg.)` : '';
+  return withTx(next, 'market_buy', `Buy ${shares} ${INDUSTRY_NAMES[id]} @ $${unit.toFixed(2)}${tag}`, -cost);
 }
 
 export function sellStock(state: GameState, id: IndustryId, shares: number): GameState {
@@ -499,7 +513,9 @@ export function sellStock(state: GameState, id: IndustryId, shares: number): Gam
   const ind = state.industries[id];
   const existing = state.holdings[id];
   if (!existing || existing.shares < shares) return state;
-  const proceeds = ind.price * shares;
+  const bonus = getNegotiatorDiscount(state);
+  const unit = ind.price * (1 + bonus);
+  const proceeds = unit * shares;
   const remaining = existing.shares - shares;
   const realized = proceeds - existing.avgCost * shares;
   const next = {
@@ -512,5 +528,5 @@ export function sellStock(state: GameState, id: IndustryId, shares: number): Gam
       [id]: { shares: remaining, avgCost: remaining === 0 ? 0 : existing.avgCost },
     },
   };
-  return withTx(next, 'market_sell', `Sell ${shares} ${INDUSTRY_NAMES[id]} @ $${ind.price.toFixed(2)} (P/L ${realized >= 0 ? '+' : ''}${formatMoney(realized)})`, proceeds);
+  return withTx(next, 'market_sell', `Sell ${shares} ${INDUSTRY_NAMES[id]} @ $${unit.toFixed(2)} (P/L ${realized >= 0 ? '+' : ''}${formatMoney(realized)})`, proceeds);
 }
