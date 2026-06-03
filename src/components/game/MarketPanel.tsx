@@ -180,6 +180,7 @@ function StockCard({
   onSell: (shares: number) => void;
 }) {
   const [qty, setQty] = useState(1);
+  const [tf, setTf] = useState<Timeframe>('1m');
   const up = i.trend >= 0;
   const shares = holding?.shares ?? 0;
   const avg = holding?.avgCost ?? 0;
@@ -190,12 +191,41 @@ function StockCard({
   const divRate = INDUSTRY_DIVIDEND[i.id] ?? 0;
   const divPerMin = shares * i.price * (divRate / 100);
 
-  // Chart data
-  const chartData = useMemo(() => i.history.map((p, idx) => ({ idx, price: p })), [i.history]);
-  const min = Math.min(...i.history);
-  const max = Math.max(...i.history);
+  // Timeframe → number of samples (~1 sample/sec)
+  const tfSamples: Record<Timeframe, number> = { '1m': 60, '5m': 180, '15m': 300, '1h': 300 };
+  const windowed = useMemo(() => i.history.slice(-tfSamples[tf]), [i.history, tf]);
+
+  // SMA window proportional to view
+  const smaPeriod = Math.max(5, Math.floor(windowed.length / 6));
+  const sma = useMemo(() => {
+    const out: (number | null)[] = [];
+    for (let idx = 0; idx < windowed.length; idx++) {
+      if (idx < smaPeriod - 1) { out.push(null); continue; }
+      let sum = 0;
+      for (let j = idx - smaPeriod + 1; j <= idx; j++) sum += windowed[j];
+      out.push(sum / smaPeriod);
+    }
+    return out;
+  }, [windowed, smaPeriod]);
+
+  const chartData = useMemo(
+    () => windowed.map((p, idx) => ({ idx, price: p, sma: sma[idx] })),
+    [windowed, sma]
+  );
+  const min = Math.min(...windowed);
+  const max = Math.max(...windowed);
   const gradId = `grad-${i.id}`;
   const stroke = up ? 'hsl(var(--success))' : 'hsl(var(--destructive))';
+
+  // Simple signal: price vs SMA + slope
+  const lastSma = sma[sma.length - 1] ?? i.price;
+  const firstSma = sma.find((v) => v !== null) ?? i.price;
+  const slopeUp = (lastSma as number) > (firstSma as number);
+  const signal = i.price > (lastSma as number) && slopeUp
+    ? { label: 'BUY',  tone: 'text-success border-success/40 bg-success/10' }
+    : i.price < (lastSma as number) && !slopeUp
+    ? { label: 'SELL', tone: 'text-destructive border-destructive/40 bg-destructive/10' }
+    : { label: 'HOLD', tone: 'text-muted-foreground border-border/60 bg-secondary' };
 
   return (
     <div id={`stock-${i.id}`} className="rounded-xl border border-border/60 bg-card-gradient p-3 transition-shadow">
@@ -221,9 +251,27 @@ function StockCard({
         </div>
       </div>
 
-      <div className="mt-1 h-14 w-full">
+      <div className="mt-1 flex items-center justify-between gap-2">
+        <div className="flex gap-0.5 rounded-md border border-border/40 bg-background/40 p-0.5">
+          {(['1m', '5m', '15m'] as Timeframe[]).map((t) => (
+            <button
+              key={t}
+              onClick={() => setTf(t)}
+              className={cn(
+                'rounded px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider transition',
+                tf === t ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
+              )}
+            >{t}</button>
+          ))}
+        </div>
+        <span className={cn('rounded-md border px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider', signal.tone)}>
+          {signal.label} · SMA{smaPeriod}
+        </span>
+      </div>
+
+      <div className="mt-1 h-16 w-full">
         <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={chartData} margin={{ top: 2, right: 0, left: 0, bottom: 0 }}>
+          <ComposedChart data={chartData} margin={{ top: 2, right: 0, left: 0, bottom: 0 }}>
             <defs>
               <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stopColor={stroke} stopOpacity={0.45} />
@@ -240,9 +288,20 @@ function StockCard({
               isAnimationActive={false}
               dot={false}
             />
-          </AreaChart>
+            <Line
+              type="monotone"
+              dataKey="sma"
+              stroke="hsl(var(--primary))"
+              strokeWidth={1.25}
+              strokeDasharray="3 3"
+              isAnimationActive={false}
+              dot={false}
+              connectNulls
+            />
+          </ComposedChart>
         </ResponsiveContainer>
       </div>
+
 
       {shares > 0 && (
         <div className="mt-2 flex items-center justify-between rounded-lg border border-border/40 bg-background/40 px-2 py-1 text-[11px]">
