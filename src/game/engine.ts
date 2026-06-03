@@ -148,6 +148,15 @@ export function getGlobalMultipliers(s: GameState) {
   return { income, speed, perBiz };
 }
 
+/** Returns a multiplier applied to trade cost/proceeds. <1 for buy (discount), >1 for sell (bonus). */
+export function getNegotiatorDiscount(s: GameState): number {
+  const negs = s.employees.filter((e) => e.role === 'Negotiator');
+  if (negs.length === 0) return 0;
+  // sum productivity, level boosts; cap at 15%
+  const raw = negs.reduce((a, e) => a + (e.productivity / 100) * (1 + (e.level - 1) * 0.25), 0);
+  return Math.min(0.15, raw * 0.04);
+}
+
 export function tick(state: GameState, dtSec: number): { state: GameState; earned: { id: BusinessId; amount: number }[] } {
   // Deep-clone mutable sub-state so we don't mutate the previous reference.
   const next: GameState = {
