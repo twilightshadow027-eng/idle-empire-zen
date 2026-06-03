@@ -1,5 +1,7 @@
 // Core game types
-export type BusinessId = 'lemonade' | 'grocery' | 'coffee' | 'delivery' | 'logistics' | 'tech';
+export type BusinessId =
+  | 'lemonade' | 'grocery' | 'coffee' | 'delivery' | 'logistics' | 'tech'
+  | 'casino' | 'oilrig' | 'bank' | 'biotech_lab' | 'space_station';
 
 export interface BusinessDef {
   id: BusinessId;
