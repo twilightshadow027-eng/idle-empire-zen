@@ -34,7 +34,7 @@ export function createInitialState(): GameState {
       price: basePrice,
       basePrice,
       trend: (Math.random() - 0.5) * 0.4,
-      history: Array.from({ length: 120 }, () => basePrice * (0.92 + Math.random() * 0.16)),
+      history: Array.from({ length: 300 }, () => basePrice * (0.92 + Math.random() * 0.16)),
     };
   });
   return {
