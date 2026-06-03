@@ -491,7 +491,9 @@ export function spinWheel(state: GameState, empNames: string[], forcedResult?: t
 export function buyStock(state: GameState, id: IndustryId, shares: number): GameState {
   if (shares <= 0) return state;
   const ind = state.industries[id];
-  const cost = ind.price * shares;
+  const discount = getNegotiatorDiscount(state);
+  const unit = ind.price * (1 - discount);
+  const cost = unit * shares;
   if (state.money < cost) return state;
   const existing = state.holdings[id] ?? { shares: 0, avgCost: 0 };
   const newShares = existing.shares + shares;
@@ -502,7 +504,8 @@ export function buyStock(state: GameState, id: IndustryId, shares: number): Game
     totalInvested: state.totalInvested + cost,
     holdings: { ...state.holdings, [id]: { shares: newShares, avgCost: newAvg } },
   };
-  return withTx(next, 'market_buy', `Buy ${shares} ${INDUSTRY_NAMES[id]} @ $${ind.price.toFixed(2)}`, -cost);
+  const tag = discount > 0 ? ` (-${(discount * 100).toFixed(1)}% neg.)` : '';
+  return withTx(next, 'market_buy', `Buy ${shares} ${INDUSTRY_NAMES[id]} @ $${unit.toFixed(2)}${tag}`, -cost);
 }
 
 export function sellStock(state: GameState, id: IndustryId, shares: number): GameState {
@@ -510,7 +513,9 @@ export function sellStock(state: GameState, id: IndustryId, shares: number): Gam
   const ind = state.industries[id];
   const existing = state.holdings[id];
   if (!existing || existing.shares < shares) return state;
-  const proceeds = ind.price * shares;
+  const bonus = getNegotiatorDiscount(state);
+  const unit = ind.price * (1 + bonus);
+  const proceeds = unit * shares;
   const remaining = existing.shares - shares;
   const realized = proceeds - existing.avgCost * shares;
   const next = {
