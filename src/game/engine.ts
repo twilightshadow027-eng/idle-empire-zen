@@ -231,8 +231,11 @@ export function tick(state: GameState, dtSec: number): { state: GameState; earne
   }
 
   const eventBias: Partial<Record<IndustryId, number>> = {};
+  const sec = getSecurityDampen(next);
   (next.events ?? []).forEach((e) => {
-    eventBias[e.industryId] = (eventBias[e.industryId] ?? 0) + e.trendBoost;
+    // Security crew softens downside events.
+    const boost = e.trendBoost < 0 ? e.trendBoost * (1 - sec) : e.trendBoost;
+    eventBias[e.industryId] = (eventBias[e.industryId] ?? 0) + boost;
   });
 
   (Object.keys(next.industries) as IndustryId[]).forEach((id) => {
