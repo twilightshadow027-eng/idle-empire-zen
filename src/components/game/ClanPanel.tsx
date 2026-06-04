@@ -7,8 +7,8 @@ export function ClanPanel() {
   const prestige = useGame((s) => s.state.prestigePoints);
   const totalEarned = useGame((s) => s.state.totalEarned);
   const doPrestige = useGame((s) => s.prestige);
-  const canPrestige = totalEarned >= 1_000_000;
-  const ptsGain = Math.floor(Math.sqrt(totalEarned / 1_000_000));
+  const canPrestige = totalEarned >= 5_000_000;
+  const ptsGain = Math.floor(Math.sqrt(totalEarned / 5_000_000));
 
   return (
     <div className="space-y-4">
@@ -43,7 +43,7 @@ export function ClanPanel() {
           <h3 className="font-display font-semibold">Prestige</h3>
         </div>
         <div className="mt-1 text-xs text-muted-foreground">
-          Reset your empire for permanent +10% income per prestige point.
+          Reset your empire for permanent +7% income per prestige point.
         </div>
         <div className="mt-2 flex items-center justify-between gap-3">
           <div>
@@ -59,7 +59,7 @@ export function ClanPanel() {
           </button>
         </div>
         {!canPrestige && (
-          <div className="mt-2 text-[11px] text-muted-foreground">Earn $1M total to unlock.</div>
+          <div className="mt-2 text-[11px] text-muted-foreground">Earn $5M total to unlock.</div>
         )}
       </div>
     </div>
