@@ -1,7 +1,7 @@
 import { useGame } from '@/game/store';
 import { BUSINESSES } from '@/game/config';
 import { formatMoney, getNegotiatorDiscount, getSecurityDampen } from '@/game/engine';
-import { Employee, EmployeeRole } from '@/game/types';
+import { EmployeeRole } from '@/game/types';
 import { Briefcase, Calculator, Eye, Wrench, Handshake, Shield, X, Plus, GraduationCap, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
