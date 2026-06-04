@@ -127,15 +127,17 @@ export function getGlobalMultipliers(s: GameState) {
       perBiz[u.effect.businessId] = (perBiz[u.effect.businessId] ?? 1) * u.effect.value;
     }
   });
-  // Prestige bonus
-  income *= 1 + s.prestigePoints * 0.1;
-  // Employees boost
+  // Prestige bonus — tuned down (was 10%/pt) to match harder progression.
+  income *= 1 + s.prestigePoints * 0.07;
+  // Employees boost. Each role is functional and scales with productivity + training level.
   s.employees.forEach((e) => {
-    if (e.role === 'Manager' && e.assignedTo) {
-      // handled via hasManager flag
-    }
-    if (e.role === 'Accountant') income *= 1 + (e.productivity / 1000);
-    if (e.role === 'Engineer') speed *= 1 + (e.productivity / 1500);
+    const lvl = 1 + (e.level - 1) * 0.2;
+    if (e.role === 'Accountant') income *= 1 + (e.productivity / 1400) * lvl;
+    if (e.role === 'Engineer')   speed  *= 1 + (e.productivity / 1800) * lvl;
+    // Spy quietly siphons market intel → small income trickle for the empire.
+    if (e.role === 'Spy')        income *= 1 + (e.intelligence / 3000) * lvl;
+    // Security raises overall multiplier slightly by preventing losses from sabotage.
+    if (e.role === 'Security')   income *= 1 + (e.loyalty / 4000) * lvl;
   });
   // Active wheel boosts
   const now = Date.now();
@@ -146,6 +148,14 @@ export function getGlobalMultipliers(s: GameState) {
     }
   });
   return { income, speed, perBiz };
+}
+
+/** Security crew dampens negative event impact on the markets (and your wallet). 0..0.6 */
+export function getSecurityDampen(s: GameState): number {
+  const secs = s.employees.filter((e) => e.role === 'Security');
+  if (!secs.length) return 0;
+  const raw = secs.reduce((a, e) => a + (e.loyalty / 100) * (1 + (e.level - 1) * 0.25), 0);
+  return Math.min(0.6, raw * 0.08);
 }
 
 /** Returns a multiplier applied to trade cost/proceeds. <1 for buy (discount), >1 for sell (bonus). */
