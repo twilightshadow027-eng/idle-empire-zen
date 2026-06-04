@@ -113,10 +113,17 @@ export const DAILY_REWARDS = [
   { day: 7, money: 50_000, prestige: 1, title: 'Legendary Loot', icon: '👑' },
 ] as const;
 
-// Wheel removed from gameplay; kept here only for legacy save compatibility.
+// Wheel removed from active UI; constants retained so engine/save migration code compiles.
 export const WHEEL_COOLDOWN_MS = 1000 * 60 * 60;
 export const WHEEL_SEGMENTS = [
-  { type: 'cash' as const, label: 'Cash Drop', icon: '💰', color: '#4ade80', chance: 1, value: 0 },
+  { type: 'cash' as const, label: 'Cash Drop', icon: '💰', color: '#4ade80', chance: 0.22, value: 2500 },
+  { type: 'speed' as const, label: 'Speed Surge', icon: '⚡', color: '#facc15', chance: 0.16, value: 2 },
+  { type: 'income' as const, label: 'Income Burst', icon: '📈', color: '#60a5fa', chance: 0.16, value: 2 },
+  { type: 'upgrade' as const, label: 'Free Upgrade', icon: '⬆️', color: '#a78bfa', chance: 0.10, value: 1 },
+  { type: 'employee' as const, label: 'Hire Rush', icon: '👤', color: '#fb923c', chance: 0.10, value: 1 },
+  { type: 'mega_cash' as const, label: 'Mega Cash', icon: '💎', color: '#f472b6', chance: 0.10, value: 25000 },
+  { type: 'prestige_dust' as const, label: 'Prestige Dust', icon: '✨', color: '#c084fc', chance: 0.08, value: 1 },
+  { type: 'nothing' as const, label: 'Nothing', icon: '🌪️', color: '#94a3b8', chance: 0.08, value: 0 },
 ] as const;
 
 export const MARKET_EVENT_POOL: { label: string; icon: string; industryId: IndustryId; trendBoost: number; durationMs: number }[] = [
