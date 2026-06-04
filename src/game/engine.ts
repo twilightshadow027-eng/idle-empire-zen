@@ -338,7 +338,7 @@ export function calculateOfflineEarnings(state: GameState, nowMs: number): numbe
     if (!b.owned || !b.hasManager) return;
     const cycle = def.productionTime / speed;
     const cycles = dtSec / cycle;
-    total += businessIncome(def.baseIncome, b.level, incMult, perBiz[def.id] ?? 1) * cycles * 0.5; // offline at 50%
+    total += businessIncome(def.baseIncome, b.level, incMult, perBiz[def.id] ?? 1) * cycles * 0.3; // offline at 30%
   });
   return Math.floor(total);
 }
