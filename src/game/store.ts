@@ -106,12 +106,26 @@ export const useGame = create<Store>((set, get) => ({
     const s = get().state;
     const emp = s.employees.find((e) => e.id === id);
     if (!emp || s.money < emp.trainingCost) return;
-    const productivityGain = 8 + Math.floor(Math.random() * 6);
-    const newProductivity = Math.min(100, emp.productivity + productivityGain);
+    // Training now lifts EVERY trait, not just productivity.
+    const bump = (cur: number, gain: number) => Math.min(100, cur + gain);
+    const dip  = (cur: number, drop: number) => Math.max(0, cur - drop);
+    const newProductivity = bump(emp.productivity, 7 + Math.floor(Math.random() * 5));
+    const newIntelligence = bump(emp.intelligence, 5 + Math.floor(Math.random() * 4));
+    const newLoyalty      = bump(emp.loyalty,      4 + Math.floor(Math.random() * 4));
+    // Greed slightly cools as employees feel invested in.
+    const newGreed        = dip(emp.greed,         1 + Math.floor(Math.random() * 3));
     const newLevel = emp.level + 1;
-    const newTrainingCost = Math.round(emp.trainingCost * 1.7);
+    const newTrainingCost = Math.round(emp.trainingCost * 1.85);
     const employees = s.employees.map((e) =>
-      e.id === id ? { ...e, productivity: newProductivity, level: newLevel, trainingCost: newTrainingCost } : e
+      e.id === id ? {
+        ...e,
+        productivity: newProductivity,
+        intelligence: newIntelligence,
+        loyalty: newLoyalty,
+        greed: newGreed,
+        level: newLevel,
+        trainingCost: newTrainingCost,
+      } : e
     );
     const next: GameState = { ...s, money: s.money - emp.trainingCost, employees };
     set({ state: withTx(next, 'hire', `Trained ${emp.name} → Lv${newLevel}`, -emp.trainingCost) });
@@ -152,8 +166,9 @@ export const useGame = create<Store>((set, get) => ({
 
   prestige: () => {
     const s = get().state;
-    if (s.totalEarned < 1_000_000) return;
-    const pts = Math.floor(Math.sqrt(s.totalEarned / 1_000_000));
+    // Harder prestige threshold: $5M lifetime earned.
+    if (s.totalEarned < 5_000_000) return;
+    const pts = Math.floor(Math.sqrt(s.totalEarned / 5_000_000));
     const fresh = createInitialState();
     const reset: GameState = {
       ...fresh,
@@ -177,8 +192,11 @@ export const useGame = create<Store>((set, get) => ({
 
   clearOffline: () => set({ offlineEarned: 0 }),
   reset: () => {
-    localStorage.removeItem('idle-empire-save-v1');
-    location.reload();
+    // Hard reset: clear storage, blank in-memory state, then reload so every panel resubscribes.
+    try { localStorage.removeItem('idle-empire-save-v1'); } catch {}
+    const fresh = createInitialState();
+    set({ state: fresh, floatings: [], offlineEarned: 0 });
+    setTimeout(() => location.reload(), 50);
   },
 }));
 

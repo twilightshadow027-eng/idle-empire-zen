@@ -166,3 +166,16 @@
   to { opacity: 1; transform: scale(1); }
 }
 .animate-scale-in { animation: scale-in 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
+
+@keyframes character-bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+.animate-character-bob { animation: character-bob 1.6s ease-in-out infinite; }
+
+@keyframes character-blink {
+  0%, 92%, 100% { transform: scaleY(1); }
+  95% { transform: scaleY(0.1); }
+}
+.animate-character-blink { animation: character-blink 4s ease-in-out infinite; transform-origin: center; }
+

@@ -1,53 +1,59 @@
 import { BusinessDef, IndustryCategory, IndustryId, Quest, UpgradeDef } from './types';
 
-export const COST_GROWTH = 1.15;
+// Harder progression: steeper geometric growth on business costs.
+export const COST_GROWTH = 1.18;
 export const TICK_MS = 100;
 
 export const BUSINESSES: BusinessDef[] = [
-  { id: 'lemonade',     name: 'Lemonade Stand', icon: '🍋', baseCost: 10,             baseIncome: 1,           productionTime: 1.2, industry: 'food',       unlockAt: 0 },
-  { id: 'grocery',      name: 'Grocery Shop',   icon: '🛒', baseCost: 250,            baseIncome: 18,          productionTime: 3,   industry: 'food',       unlockAt: 100 },
-  { id: 'coffee',       name: 'Coffee Chain',   icon: '☕', baseCost: 2_500,          baseIncome: 120,         productionTime: 6,   industry: 'food',       unlockAt: 1_000 },
-  { id: 'delivery',     name: 'Delivery Co.',   icon: '🚚', baseCost: 25_000,         baseIncome: 950,         productionTime: 10,  industry: 'transport',  unlockAt: 10_000 },
-  { id: 'casino',       name: 'Casino',         icon: '🎰', baseCost: 100_000,        baseIncome: 3_800,       productionTime: 14,  industry: 'luxury',     unlockAt: 40_000 },
-  { id: 'logistics',    name: 'Logistics HQ',   icon: '🏭', baseCost: 250_000,        baseIncome: 8_500,       productionTime: 18,  industry: 'transport',  unlockAt: 100_000 },
-  { id: 'oilrig',       name: 'Oil Rig',        icon: '🛢️', baseCost: 750_000,        baseIncome: 22_000,      productionTime: 22,  industry: 'oil',        unlockAt: 300_000 },
-  { id: 'bank',         name: 'Investment Bank',icon: '🏦', baseCost: 1_200_000,      baseIncome: 38_000,      productionTime: 25,  industry: 'banks',      unlockAt: 500_000 },
-  { id: 'tech',         name: 'Tech Startup',   icon: '💻', baseCost: 2_500_000,      baseIncome: 75_000,      productionTime: 30,  industry: 'tech',       unlockAt: 1_000_000 },
-  { id: 'biotech_lab',  name: 'Biotech Lab',    icon: '🧬', baseCost: 12_000_000,     baseIncome: 320_000,     productionTime: 36,  industry: 'biotech',    unlockAt: 5_000_000 },
-  { id: 'space_station',name: 'Space Station',  icon: '🛰️', baseCost: 80_000_000,     baseIncome: 1_800_000,   productionTime: 45,  industry: 'space',      unlockAt: 30_000_000 },
+  { id: 'lemonade',     name: 'Lemonade Stand', icon: '🍋', baseCost: 15,             baseIncome: 1,           productionTime: 1.5, industry: 'food',       unlockAt: 0 },
+  { id: 'grocery',      name: 'Grocery Shop',   icon: '🛒', baseCost: 400,            baseIncome: 16,          productionTime: 3.5, industry: 'food',       unlockAt: 150 },
+  { id: 'coffee',       name: 'Coffee Chain',   icon: '☕', baseCost: 4_500,          baseIncome: 95,          productionTime: 7,   industry: 'food',       unlockAt: 1_800 },
+  { id: 'delivery',     name: 'Delivery Co.',   icon: '🚚', baseCost: 45_000,         baseIncome: 720,         productionTime: 12,  industry: 'transport',  unlockAt: 18_000 },
+  { id: 'casino',       name: 'Casino',         icon: '🎰', baseCost: 200_000,        baseIncome: 2_900,       productionTime: 16,  industry: 'luxury',     unlockAt: 75_000 },
+  { id: 'logistics',    name: 'Logistics HQ',   icon: '🏭', baseCost: 600_000,        baseIncome: 6_800,       productionTime: 20,  industry: 'transport',  unlockAt: 200_000 },
+  { id: 'oilrig',       name: 'Oil Rig',        icon: '🛢️', baseCost: 1_800_000,      baseIncome: 17_500,      productionTime: 24,  industry: 'oil',        unlockAt: 700_000 },
+  { id: 'bank',         name: 'Investment Bank',icon: '🏦', baseCost: 3_500_000,      baseIncome: 30_000,      productionTime: 27,  industry: 'banks',      unlockAt: 1_200_000 },
+  { id: 'tech',         name: 'Tech Startup',   icon: '💻', baseCost: 7_500_000,      baseIncome: 58_000,      productionTime: 32,  industry: 'tech',       unlockAt: 3_000_000 },
+  { id: 'mediaempire',  name: 'Media Empire',   icon: '🎬', baseCost: 22_000_000,     baseIncome: 160_000,     productionTime: 35,  industry: 'media',      unlockAt: 9_000_000 },
+  { id: 'biotech_lab',  name: 'Biotech Lab',    icon: '🧬', baseCost: 60_000_000,     baseIncome: 380_000,     productionTime: 40,  industry: 'biotech',    unlockAt: 25_000_000 },
+  { id: 'cryptofarm',   name: 'Crypto Farm',    icon: '⛏️', baseCost: 180_000_000,    baseIncome: 1_050_000,   productionTime: 42,  industry: 'crypto',     unlockAt: 80_000_000 },
+  { id: 'aifoundry',    name: 'AI Foundry',     icon: '🤖', baseCost: 600_000_000,    baseIncome: 3_200_000,   productionTime: 45,  industry: 'ai',         unlockAt: 250_000_000 },
+  { id: 'space_station',name: 'Space Station',  icon: '🛰️', baseCost: 2_400_000_000,  baseIncome: 11_500_000,  productionTime: 50,  industry: 'space',      unlockAt: 1_000_000_000 },
 ];
 
 export const UPGRADES: UpgradeDef[] = [
-  { id: 'speed1',      name: 'Faster Workers',    description: '+25% global production speed',     cost: 5_000,      category: 'speed',      effect: { type: 'globalSpeed', value: 1.25 } },
-  { id: 'speed2',      name: 'Logistics Network', description: '+50% global production speed',     cost: 250_000,    category: 'speed',      effect: { type: 'globalSpeed', value: 1.5 } },
-  { id: 'speed3',      name: 'Quantum Workflow',  description: '×2 global production speed',       cost: 10_000_000, category: 'speed',      effect: { type: 'globalSpeed', value: 2 } },
-  { id: 'efficiency1', name: 'Lean Operations',   description: '+50% global income',               cost: 15_000,     category: 'efficiency', effect: { type: 'globalIncome', value: 1.5 } },
-  { id: 'efficiency2', name: 'AI Optimization',   description: '×3 global income',                 cost: 750_000,    category: 'efficiency', effect: { type: 'globalIncome', value: 3 } },
-  { id: 'efficiency3', name: 'Corporate Synergy', description: '×5 global income',                 cost: 50_000_000, category: 'efficiency', effect: { type: 'globalIncome', value: 5 } },
-  { id: 'automation1', name: 'Auto-Collect Bots', description: 'Smoother passive income flow',     cost: 50_000,     category: 'automation', effect: { type: 'globalIncome', value: 1.2 } },
-  { id: 'automation2', name: 'Drone Fleet',       description: '+40% income while idle',           cost: 2_500_000,  category: 'automation', effect: { type: 'globalIncome', value: 1.4 } },
-  { id: 'worker1',     name: 'Worker Bonuses',    description: '+40% income from Coffee Chain',    cost: 35_000,     category: 'worker',     effect: { type: 'businessIncome', value: 1.4, businessId: 'coffee' } },
-  { id: 'worker2',     name: 'Logistics Boost',   description: '×2 income from Logistics HQ',      cost: 1_500_000,  category: 'worker',     effect: { type: 'businessIncome', value: 2, businessId: 'logistics' } },
-  { id: 'market1',     name: 'Market Insights',   description: '+25% income from Investment Bank', cost: 4_000_000,  category: 'worker',     effect: { type: 'businessIncome', value: 1.25, businessId: 'bank' } },
-  { id: 'market2',     name: 'Orbital Manufacturing', description: '×2.5 income from Space Station', cost: 200_000_000, category: 'worker', effect: { type: 'businessIncome', value: 2.5, businessId: 'space_station' } },
+  // Speed tree
+  { id: 'speed1',      name: 'Faster Workers',     description: '+25% global production speed',     cost: 8_000,        category: 'speed',      effect: { type: 'globalSpeed', value: 1.25 } },
+  { id: 'speed2',      name: 'Logistics Network',  description: '+50% global production speed',     cost: 500_000,      category: 'speed',      effect: { type: 'globalSpeed', value: 1.5 } },
+  { id: 'speed3',      name: 'Quantum Workflow',   description: '×2 global production speed',       cost: 25_000_000,   category: 'speed',      effect: { type: 'globalSpeed', value: 2 } },
+  // Efficiency tree
+  { id: 'efficiency1', name: 'Lean Operations',    description: '+50% global income',               cost: 25_000,       category: 'efficiency', effect: { type: 'globalIncome', value: 1.5 } },
+  { id: 'efficiency2', name: 'AI Optimization',    description: '×2.5 global income',               cost: 1_500_000,    category: 'efficiency', effect: { type: 'globalIncome', value: 2.5 } },
+  { id: 'efficiency3', name: 'Corporate Synergy',  description: '×4 global income',                 cost: 120_000_000,  category: 'efficiency', effect: { type: 'globalIncome', value: 4 } },
+  // Automation tree
+  { id: 'automation1', name: 'Auto-Collect Bots',  description: 'Smoother passive income flow',     cost: 80_000,       category: 'automation', effect: { type: 'globalIncome', value: 1.15 } },
+  { id: 'automation2', name: 'Drone Fleet',        description: '+30% income while idle',           cost: 5_000_000,    category: 'automation', effect: { type: 'globalIncome', value: 1.3 } },
+  { id: 'automation3', name: 'Neural Pipeline',    description: '+25% income & speed',              cost: 80_000_000,   category: 'automation', effect: { type: 'globalIncome', value: 1.25 } },
+  // Worker (business-specific)
+  { id: 'worker1',     name: 'Worker Bonuses',     description: '+40% income from Coffee Chain',    cost: 60_000,       category: 'worker',     effect: { type: 'businessIncome', value: 1.4, businessId: 'coffee' } },
+  { id: 'worker2',     name: 'Logistics Boost',    description: '×2 income from Logistics HQ',      cost: 3_000_000,    category: 'worker',     effect: { type: 'businessIncome', value: 2, businessId: 'logistics' } },
+  { id: 'worker3',     name: 'Casino Comps',       description: '×1.8 income from Casino',          cost: 800_000,      category: 'worker',     effect: { type: 'businessIncome', value: 1.8, businessId: 'casino' } },
+  { id: 'worker4',     name: 'Drilling Tech',      description: '×2 income from Oil Rig',           cost: 12_000_000,   category: 'worker',     effect: { type: 'businessIncome', value: 2, businessId: 'oilrig' } },
+  { id: 'market1',     name: 'Market Insights',    description: '+25% income from Investment Bank', cost: 8_000_000,    category: 'worker',     effect: { type: 'businessIncome', value: 1.25, businessId: 'bank' } },
+  { id: 'market2',     name: 'Orbital Manufacturing', description: '×2.5 income from Space Station', cost: 500_000_000, category: 'worker',     effect: { type: 'businessIncome', value: 2.5, businessId: 'space_station' } },
+  { id: 'market3',     name: 'GPU Cluster',        description: '×2 income from AI Foundry',        cost: 250_000_000,  category: 'worker',     effect: { type: 'businessIncome', value: 2, businessId: 'aifoundry' } },
+  { id: 'market4',     name: 'Hash Optimizer',     description: '×1.8 income from Crypto Farm',     cost: 90_000_000,   category: 'worker',     effect: { type: 'businessIncome', value: 1.8, businessId: 'cryptofarm' } },
+  { id: 'market5',     name: 'Streaming Deals',    description: '×1.6 income from Media Empire',    cost: 18_000_000,   category: 'worker',     effect: { type: 'businessIncome', value: 1.6, businessId: 'mediaempire' } },
 ];
 
 export const INDUSTRY_NAMES: Record<IndustryId, string> = {
-  // Energy
   oil: 'OIL', gas: 'NGAS', coal: 'COAL', solar: 'SOLR', nuclear: 'NUKE', energy: 'NRG',
-  // Metals
   gold: 'AUX', silver: 'SLVR', copper: 'CPPR', platinum: 'PLAT', lithium: 'LITH',
-  // Crypto
   crypto: 'BTC', eth: 'ETH', doge: 'DOGE', sol: 'SOL',
-  // Tech
   tech: 'TECH', ai: 'AI', semis: 'CHIP', cloud: 'CLD', gaming: 'GMNG',
-  // Finance
   finance: 'FINX', banks: 'BNK', insurance: 'INS',
-  // Consumer
   food: 'FOOD', luxury: 'LUXE', media: 'MDIA', retail: 'RTL',
-  // Industrial
   transport: 'TRNS', logistics: 'LGX', military: 'MILX', space: 'SPCE',
-  // Real Estate / Health
   realestate: 'REIT', pharma: 'PHRM', biotech: 'BIO',
 };
 
@@ -80,8 +86,6 @@ export const INDUSTRY_VOLATILITY: Record<IndustryId, number> = {
   realestate: 0.5, pharma: 1.2, biotech: 2.0,
 };
 
-// Dividend yield expressed as % of share price paid per IN-GAME MINUTE.
-// Stable/value sectors pay more; growth/crypto pay little to nothing.
 export const INDUSTRY_DIVIDEND: Record<IndustryId, number> = {
   oil: 1.2, gas: 1.1, coal: 1.4, solar: 0.3, nuclear: 1.0, energy: 1.0,
   gold: 0.4, silver: 0.3, copper: 0.7, platinum: 0.5, lithium: 0.2,
@@ -109,8 +113,8 @@ export const DAILY_REWARDS = [
   { day: 7, money: 50_000, prestige: 1, title: 'Legendary Loot', icon: '👑' },
 ] as const;
 
-export const WHEEL_COOLDOWN_MS = 1000 * 60 * 60; // 1 hour
-
+// Wheel removed from active UI; constants retained so engine/save migration code compiles.
+export const WHEEL_COOLDOWN_MS = 1000 * 60 * 60;
 export const WHEEL_SEGMENTS = [
   { type: 'cash' as const, label: 'Cash Drop', icon: '💰', color: '#4ade80', chance: 0.22, value: 2500 },
   { type: 'speed' as const, label: 'Speed Surge', icon: '⚡', color: '#facc15', chance: 0.16, value: 2 },
@@ -122,7 +126,6 @@ export const WHEEL_SEGMENTS = [
   { type: 'nothing' as const, label: 'Nothing', icon: '🌪️', color: '#94a3b8', chance: 0.08, value: 0 },
 ] as const;
 
-// Pool of dynamic market events. Each tick, one might be spawned, biasing an industry's trend.
 export const MARKET_EVENT_POOL: { label: string; icon: string; industryId: IndustryId; trendBoost: number; durationMs: number }[] = [
   { label: 'AI breakthrough boosts chips',      icon: '🤖', industryId: 'ai',         trendBoost: 0.6,  durationMs: 60_000 },
   { label: 'Semiconductor shortage',            icon: '🔌', industryId: 'semis',      trendBoost: 0.5,  durationMs: 60_000 },
@@ -152,10 +155,11 @@ export const MARKET_EVENT_POOL: { label: string; icon: string; industryId: Indus
 
 export const QUESTS: Quest[] = [
   { id: 'q-own3',       label: 'Own 3 businesses',          target: 3,         reward: '+$500',     rewardMoney: 500,        metric: 'owned' },
-  { id: 'q-own-all',    label: 'Own every business',        target: BUSINESSES.length, reward: '+$50K', rewardMoney: 50_000, metric: 'owned' },
+  { id: 'q-own-all',    label: 'Own every business',        target: BUSINESSES.length, reward: '+$250K', rewardMoney: 250_000, metric: 'owned' },
   { id: 'q-earn-10k',   label: 'Earn $10K total',           target: 10_000,    reward: '+$1K',      rewardMoney: 1_000,      metric: 'totalEarned' },
   { id: 'q-earn-1m',    label: 'Earn $1M total',            target: 1_000_000, reward: '+$50K',     rewardMoney: 50_000,     metric: 'totalEarned' },
   { id: 'q-earn-100m',  label: 'Earn $100M total',          target: 100_000_000, reward: '+$5M',    rewardMoney: 5_000_000,  metric: 'totalEarned' },
+  { id: 'q-earn-1b',    label: 'Earn $1B total',            target: 1_000_000_000, reward: '+$50M', rewardMoney: 50_000_000, metric: 'totalEarned' },
   { id: 'q-levels-50',  label: 'Reach 50 total biz levels', target: 50,        reward: '+$5K',      rewardMoney: 5_000,      metric: 'totalLevels' },
   { id: 'q-levels-200', label: 'Reach 200 total biz levels',target: 200,       reward: '+$250K',    rewardMoney: 250_000,    metric: 'totalLevels' },
   { id: 'q-mgr',        label: 'Hire 1 Manager',            target: 1,         reward: '+$2K',      rewardMoney: 2_000,      metric: 'managers' },
@@ -164,6 +168,7 @@ export const QUESTS: Quest[] = [
   { id: 'q-port-10k',   label: 'Hold $10K in stocks',       target: 10_000,    reward: '+$3K',      rewardMoney: 3_000,      metric: 'portfolio' },
   { id: 'q-port-1m',    label: 'Hold $1M portfolio',        target: 1_000_000, reward: '+$100K',    rewardMoney: 100_000,    metric: 'portfolio' },
   { id: 'q-up-3',       label: 'Buy 3 upgrades',            target: 3,         reward: '+$10K',     rewardMoney: 10_000,     metric: 'upgrades' },
+  { id: 'q-up-10',      label: 'Buy 10 upgrades',           target: 10,        reward: '+$500K',    rewardMoney: 500_000,    metric: 'upgrades' },
   { id: 'q-divs',       label: 'Earn $5K in dividends',     target: 5_000,     reward: '+$5K',      rewardMoney: 5_000,      metric: 'dividends' },
   { id: 'q-prestige',   label: 'Prestige once',             target: 1,         reward: '+$100K',    rewardMoney: 100_000,    metric: 'prestige' },
   { id: 'q-stocks-5',   label: 'Invest in 5 industries',    target: 5,         reward: '+$25K',     rewardMoney: 25_000,     metric: 'industries' },
