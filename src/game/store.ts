@@ -166,8 +166,9 @@ export const useGame = create<Store>((set, get) => ({
 
   prestige: () => {
     const s = get().state;
-    if (s.totalEarned < 1_000_000) return;
-    const pts = Math.floor(Math.sqrt(s.totalEarned / 1_000_000));
+    // Harder prestige threshold: $5M lifetime earned.
+    if (s.totalEarned < 5_000_000) return;
+    const pts = Math.floor(Math.sqrt(s.totalEarned / 5_000_000));
     const fresh = createInitialState();
     const reset: GameState = {
       ...fresh,
@@ -191,8 +192,11 @@ export const useGame = create<Store>((set, get) => ({
 
   clearOffline: () => set({ offlineEarned: 0 }),
   reset: () => {
-    localStorage.removeItem('idle-empire-save-v1');
-    location.reload();
+    // Hard reset: clear storage, blank in-memory state, then reload so every panel resubscribes.
+    try { localStorage.removeItem('idle-empire-save-v1'); } catch {}
+    const fresh = createInitialState();
+    set({ state: fresh, floatings: [], offlineEarned: 0 });
+    setTimeout(() => location.reload(), 50);
   },
 }));
 
