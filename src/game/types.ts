@@ -1,7 +1,8 @@
 // Core game types
 export type BusinessId =
   | 'lemonade' | 'grocery' | 'coffee' | 'delivery' | 'logistics' | 'tech'
-  | 'casino' | 'oilrig' | 'bank' | 'biotech_lab' | 'space_station';
+  | 'casino' | 'oilrig' | 'bank' | 'biotech_lab' | 'space_station'
+  | 'mediaempire' | 'cryptofarm' | 'aifoundry';
 
 export interface BusinessDef {
   id: BusinessId;
@@ -74,9 +75,9 @@ export interface Quest {
 export type UpgradeId =
   | 'speed1' | 'speed2' | 'speed3'
   | 'efficiency1' | 'efficiency2' | 'efficiency3'
-  | 'automation1' | 'automation2'
-  | 'worker1' | 'worker2'
-  | 'market1' | 'market2';
+  | 'automation1' | 'automation2' | 'automation3'
+  | 'worker1' | 'worker2' | 'worker3' | 'worker4'
+  | 'market1' | 'market2' | 'market3' | 'market4' | 'market5';
 
 export interface UpgradeDef {
   id: UpgradeId;
