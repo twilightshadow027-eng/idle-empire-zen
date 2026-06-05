@@ -24,6 +24,7 @@ interface Store {
   buyStockAction: (id: IndustryId, shares: number) => void;
   sellStockAction: (id: IndustryId, shares: number) => void;
   claimQuestAction: (questId: string) => void;
+  claimDeal: (id: string, influenceCost: number, type: 'speed' | 'income', multiplier: number, durationMin: number) => void;
   clearOffline: () => void;
   reset: () => void;
 }
