@@ -288,3 +288,150 @@ function DealCard({
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const _kept = formatMoney;
+
+function EnvoysSection({
+  money,
+  employees,
+  envoys,
+  onDispatch,
+}: {
+  money: number;
+  employees: { id: string; name: string; role: string; intelligence: number; productivity: number; level: number }[];
+  envoys: { id: string; employeeId: string; employeeName: string; endsAt: number; reward: number; label: string; cost: number }[];
+  onDispatch: (employeeId: string, durationMin: number, cost: number, label: string) => void;
+}) {
+  const [tierByEmp, setTierByEmp] = useState<Record<string, TierId>>({});
+  const [now, setNow] = useState(Date.now());
+
+  // Re-render envoy countdowns every second.
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  return (
+    <div className="rounded-xl border border-primary/30 bg-gradient-to-br from-primary/10 to-transparent p-4">
+      <div className="flex items-center gap-2">
+        <Send className="h-4 w-4 text-primary" />
+        <h3 className="font-display font-semibold">Envoys on Business Deals</h3>
+      </div>
+      <p className="mt-1 text-xs text-muted-foreground">
+        Dispatch staff on trips. Pay cash now, gain influence when they return.
+      </p>
+
+      {envoys.length > 0 && (
+        <div className="mt-3 space-y-1.5">
+          <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+            On Mission ({envoys.length})
+          </div>
+          {envoys.map((env) => {
+            const remaining = env.endsAt - now;
+            const total = env.endsAt - (env.endsAt - remaining); // unknown start cached; use label only
+            void total;
+            const pct = Math.max(0, Math.min(100, 100 - (remaining / (60 * 60 * 1000)) * 100));
+            return (
+              <div key={env.id} className="rounded-lg border border-border/60 bg-card/60 p-2">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="inline-flex items-center gap-1 font-semibold">
+                    <Hourglass className="h-3 w-3 text-primary" />
+                    {env.employeeName}
+                    <span className="text-muted-foreground">· {env.label}</span>
+                  </span>
+                  <span className="inline-flex items-center gap-1 text-accent">
+                    <Sparkles className="h-3 w-3" /> +{env.reward}
+                  </span>
+                </div>
+                <div className="mt-1 flex items-center justify-between gap-2 text-[10px] text-muted-foreground">
+                  <div className="h-1 flex-1 overflow-hidden rounded-full bg-background/60">
+                    <div
+                      className="h-full bg-gradient-to-r from-primary to-accent transition-all"
+                      style={{ width: `${pct}%` }}
+                    />
+                  </div>
+                  <span className="font-mono">{fmtCountdown(remaining)}</span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      <div className="mt-3 space-y-1.5">
+        <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+          Available Staff ({employees.length})
+        </div>
+        {employees.length === 0 ? (
+          <div className="flex items-center gap-2 rounded-lg border border-dashed border-border/60 bg-card/40 px-3 py-3 text-xs text-muted-foreground">
+            <Users className="h-3.5 w-3.5" />
+            Hire staff (or wait for envoys to return) to dispatch missions.
+          </div>
+        ) : (
+          employees.map((emp) => {
+            const tier = ENVOY_TIERS.find((t) => t.id === (tierByEmp[emp.id] ?? 'short'))!;
+            const reward = estimateReward(emp.intelligence, emp.productivity, emp.role, tier.durationMin);
+            const canAfford = money >= tier.cost;
+            return (
+              <div key={emp.id} className="rounded-lg border border-border/60 bg-card/60 p-2">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="min-w-0">
+                    <div className="truncate font-display text-sm font-semibold">
+                      {emp.name}
+                      <span className="ml-1 text-[10px] font-normal text-muted-foreground">
+                        · {emp.role} Lv{emp.level}
+                      </span>
+                    </div>
+                    <div className="text-[10px] text-muted-foreground">
+                      INT {emp.intelligence} · PRD {emp.productivity}
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => onDispatch(emp.id, tier.durationMin, tier.cost, tier.label)}
+                    disabled={!canAfford}
+                    className={cn(
+                      'inline-flex items-center gap-1 rounded-md px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider transition',
+                      canAfford
+                        ? 'bg-gradient-to-b from-primary to-primary-glow text-primary-foreground hover:scale-105'
+                        : 'border border-border/40 bg-background/30 text-muted-foreground'
+                    )}
+                  >
+                    <Send className="h-3 w-3" />
+                    Send
+                  </button>
+                </div>
+                <div className="mt-1.5 flex flex-wrap items-center gap-1">
+                  {ENVOY_TIERS.map((t) => {
+                    const active = (tierByEmp[emp.id] ?? 'short') === t.id;
+                    return (
+                      <button
+                        key={t.id}
+                        onClick={() => setTierByEmp((m) => ({ ...m, [emp.id]: t.id }))}
+                        className={cn(
+                          'rounded-md border px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider transition',
+                          active
+                            ? 'border-primary/60 bg-primary/15 text-primary'
+                            : 'border-border/60 bg-background/40 text-muted-foreground hover:text-foreground'
+                        )}
+                      >
+                        {t.label}
+                      </button>
+                    );
+                  })}
+                </div>
+                <div className="mt-1 flex items-center justify-between text-[10px]">
+                  <span className="inline-flex items-center gap-1 text-muted-foreground">
+                    <Briefcase className="h-3 w-3" />
+                    {fmtCountdown(tier.durationMin * 60_000)}
+                    <span>· cost {formatMoney(tier.cost)}</span>
+                  </span>
+                  <span className="inline-flex items-center gap-1 font-bold text-accent">
+                    <Sparkles className="h-3 w-3" /> +{reward} infl.
+                  </span>
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+    </div>
+  );
+}
