@@ -5,7 +5,8 @@ import { useUI } from '@/game/uiStore';
 import { formatMoney } from '@/game/engine';
 import { INDUSTRY_DIVIDEND, INDUSTRY_CATEGORY, CATEGORY_ORDER, CATEGORY_LABELS } from '@/game/config';
 import type { IndustryCategory, IndustryId, IndustryState, StockHolding, Timeframe } from '@/game/types';
-import { TrendingDown, TrendingUp, Wallet, Briefcase, Coins, ChevronDown } from 'lucide-react';
+import { TrendingDown, TrendingUp, Wallet, Briefcase, Coins, ChevronDown, ListOrdered } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 
 export function MarketPanel() {
