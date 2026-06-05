@@ -206,6 +206,36 @@ export const useGame = create<Store>((set, get) => ({
     set({ state: withTx(next, 'event', `Forged deal: ${id} (×${multiplier} ${type}, ${durationMin}m)`, 0) });
   },
 
+  dispatchEnvoy: (employeeId, durationMin, cost, label) => {
+    const s = get().state;
+    const emp = s.employees.find((e) => e.id === employeeId);
+    if (!emp || s.money < cost) return;
+    if ((s.envoys ?? []).some((e) => e.employeeId === employeeId)) return; // already on mission
+    // Reward scales with intelligence, productivity, role, and duration.
+    const roleBonus = emp.role === 'Negotiator' ? 0.6 : emp.role === 'Spy' ? 0.3 : 0;
+    const skill = 0.5 + emp.intelligence / 100 + emp.productivity / 200 + roleBonus;
+    const baseInfluence = Math.max(1, Math.round(durationMin / 5));
+    const reward = Math.max(1, Math.round(baseInfluence * skill));
+    const env = {
+      id: crypto.randomUUID(),
+      employeeId,
+      employeeName: emp.name,
+      startedAt: Date.now(),
+      endsAt: Date.now() + durationMin * 60 * 1000,
+      cost,
+      reward,
+      label,
+    };
+    const next: GameState = {
+      ...s,
+      money: s.money - cost,
+      envoys: [...(s.envoys ?? []), env],
+    };
+    set({ state: withTx(next, 'event', `🕊️ Dispatched envoy ${emp.name} (${label}) — returns +${reward} infl.`, -cost) });
+  },
+
+
+
   clearOffline: () => set({ offlineEarned: 0 }),
   reset: () => {
     // Hard reset: clear storage, blank in-memory state, then reload so every panel resubscribes.
