@@ -183,4 +183,16 @@ export interface GameState {
   questsClaimed: Record<string, boolean>;
   transactions: Transaction[];
   lastDividendLogTs: number;
+  envoys: Envoy[];
+}
+
+export interface Envoy {
+  id: string;
+  employeeId: string;
+  employeeName: string;
+  startedAt: number;
+  endsAt: number;
+  cost: number;
+  reward: number; // influence on completion
+  label: string;
 }
