@@ -171,6 +171,87 @@ function SummaryCard({ icon, label, value, tone }: { icon: React.ReactNode; labe
   );
 }
 
+function PortfolioSummary({
+  value,
+  industries,
+  holdings,
+}: {
+  value: number;
+  industries: Record<IndustryId, IndustryState>;
+  holdings: Record<IndustryId, StockHolding>;
+}) {
+  const positions = Object.entries(holdings)
+    .filter(([, h]) => h && h.shares > 0)
+    .map(([id, h]) => {
+      const ind = industries[id as IndustryId];
+      const mkt = h.shares * ind.price;
+      const cost = h.shares * h.avgCost;
+      const pl = mkt - cost;
+      return { id: id as IndustryId, name: ind.name, shares: h.shares, avg: h.avgCost, price: ind.price, mkt, pl };
+    })
+    .sort((a, b) => b.mkt - a.mkt);
+
+  return (
+    <Dialog>
+      <div className="relative rounded-xl border border-accent/30 bg-accent/5 p-2.5 text-accent">
+        <div className="flex items-center justify-between gap-1 text-[10px] uppercase tracking-wider opacity-80">
+          <span className="flex items-center gap-1">
+            <Briefcase className="h-3.5 w-3.5" />
+            Portfolio
+          </span>
+          <DialogTrigger asChild>
+            <button
+              aria-label="View positions"
+              title="View positions"
+              className="relative inline-flex h-5 w-5 items-center justify-center rounded-md border border-accent/40 bg-background/40 transition hover:border-accent hover:bg-accent/10"
+            >
+              <ListOrdered className="h-3 w-3" />
+              {positions.length > 0 && (
+                <span className="absolute -right-1 -top-1 inline-flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-accent px-1 text-[8px] font-bold text-accent-foreground">
+                  {positions.length}
+                </span>
+              )}
+            </button>
+          </DialogTrigger>
+        </div>
+        <div className="mt-0.5 font-mono text-sm font-bold sm:text-base">{formatMoney(value)}</div>
+      </div>
+      <DialogContent className="max-h-[80vh] overflow-y-auto sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Briefcase className="h-4 w-4 text-accent" />
+            Open Positions ({positions.length})
+          </DialogTitle>
+        </DialogHeader>
+        {positions.length === 0 ? (
+          <div className="py-6 text-center text-sm text-muted-foreground">
+            You hold no positions yet. Buy shares from the market below.
+          </div>
+        ) : (
+          <div className="space-y-1.5">
+            {positions.map((p) => (
+              <div key={p.id} className="flex items-center justify-between rounded-lg border border-border/60 bg-card/60 px-3 py-2">
+                <div className="min-w-0">
+                  <div className="truncate font-display text-sm font-bold">{p.name}</div>
+                  <div className="font-mono text-[11px] text-muted-foreground">
+                    {p.shares} sh @ ${p.avg.toFixed(2)} → ${p.price.toFixed(2)}
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="font-mono text-sm font-bold">{formatMoney(p.mkt)}</div>
+                  <div className={cn('font-mono text-[11px] font-bold', p.pl >= 0 ? 'text-success' : 'text-destructive')}>
+                    {p.pl >= 0 ? '+' : ''}{formatMoney(p.pl)}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 function StockCard({
   industry: i,
   holding,
