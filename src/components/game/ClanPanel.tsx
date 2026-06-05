@@ -172,6 +172,13 @@ export function ClanPanel() {
         })}
       </div>
 
+      <EnvoysSection
+        money={money}
+        employees={available}
+        envoys={envoys}
+        onDispatch={dispatchEnvoy}
+      />
+
       <div className="rounded-xl border border-primary/40 bg-gradient-to-br from-primary/10 to-transparent p-4">
         <div className="flex items-center gap-2">
           <Crown className="h-4 w-4 text-primary" />
