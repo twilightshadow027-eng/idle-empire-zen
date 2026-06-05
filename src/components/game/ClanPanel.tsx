@@ -1,7 +1,38 @@
+import { useEffect, useState } from 'react';
 import { useGame } from '@/game/store';
 import { formatMoney } from '@/game/engine';
-import { Handshake, Sparkles, Zap, TrendingUp, Crown, ShieldCheck, Lock, CheckCircle2 } from 'lucide-react';
+import {
+  Handshake, Sparkles, Zap, TrendingUp, Crown, ShieldCheck, Lock, CheckCircle2,
+  Send, Hourglass, Users, Briefcase,
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
+
+const ENVOY_TIERS = [
+  { id: 'short',  label: 'Short Trip',  durationMin: 5,  cost: 5_000 },
+  { id: 'medium', label: 'Trade Run',   durationMin: 15, cost: 20_000 },
+  { id: 'long',   label: 'Diplomatic Tour', durationMin: 60, cost: 80_000 },
+] as const;
+
+type TierId = typeof ENVOY_TIERS[number]['id'];
+
+function fmtCountdown(ms: number): string {
+  if (ms <= 0) return '0s';
+  const s = Math.floor(ms / 1000);
+  const m = Math.floor(s / 60);
+  const r = s % 60;
+  if (m >= 60) {
+    const h = Math.floor(m / 60);
+    return `${h}h ${m % 60}m`;
+  }
+  return m > 0 ? `${m}m ${r}s` : `${r}s`;
+}
+
+function estimateReward(empIntel: number, empProd: number, role: string, durationMin: number) {
+  const roleBonus = role === 'Negotiator' ? 0.6 : role === 'Spy' ? 0.3 : 0;
+  const skill = 0.5 + empIntel / 100 + empProd / 200 + roleBonus;
+  const base = Math.max(1, Math.round(durationMin / 5));
+  return Math.max(1, Math.round(base * skill));
+}
 
 interface Deal {
   id: string;
