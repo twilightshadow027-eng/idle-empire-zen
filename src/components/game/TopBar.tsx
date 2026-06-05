@@ -24,22 +24,8 @@ export function TopBar() {
             <span className="font-display text-lg font-bold text-primary-foreground">E</span>
           </div>
           <div>
-            <div className="font-display text-xs font-semibold uppercase tracking-widest text-muted-foreground">Idle Empire</div>
-            <AnimatedCounter value={money} className="font-display text-xl font-bold text-gradient-gold sm:text-2xl" />
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2 sm:gap-4">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-primary-glow shadow-[0_0_20px_hsl(var(--primary)/0.5)]">
-            <span className="font-display text-lg font-bold text-primary-foreground">E</span>
-          </div>
-          <div>
             <div className="mb-0.5 flex items-center gap-1">
-              <QuickAction
-                onClick={() => setTab('rewards')}
-                title="Daily reward"
-                pulse={dailyAvailable}
-              >
+              <QuickAction onClick={() => setTab('rewards')} title="Daily reward" pulse={dailyAvailable}>
                 <Gift className="h-3 w-3" />
               </QuickAction>
               <QuickAction onClick={() => setTab('ledger')} title="Transaction ledger">
@@ -78,6 +64,38 @@ export function TopBar() {
         </div>
       </div>
     </header>
+  );
+}
+
+function QuickAction({
+  onClick,
+  title,
+  pulse,
+  children,
+}: {
+  onClick: () => void;
+  title: string;
+  pulse?: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      title={title}
+      aria-label={title}
+      className={cn(
+        'relative inline-flex h-5 w-5 items-center justify-center rounded-md border border-border/60 bg-card/60 text-muted-foreground transition hover:border-primary/60 hover:text-primary',
+        pulse && 'border-primary/60 text-primary'
+      )}
+    >
+      {children}
+      {pulse && (
+        <span className="absolute -right-0.5 -top-0.5 flex h-1.5 w-1.5">
+          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-destructive opacity-75" />
+          <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-destructive" />
+        </span>
+      )}
+    </button>
   );
 }
 
