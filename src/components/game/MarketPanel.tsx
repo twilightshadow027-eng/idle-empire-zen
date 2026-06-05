@@ -73,7 +73,11 @@ export function MarketPanel() {
     <div className="space-y-3">
       <div className="grid grid-cols-3 gap-2">
         <SummaryCard icon={<Wallet className="h-3.5 w-3.5" />} label="Cash" value={formatMoney(money)} tone="primary" />
-        <SummaryCard icon={<Briefcase className="h-3.5 w-3.5" />} label="Portfolio" value={formatMoney(portfolioValue)} tone="accent" />
+        <PortfolioSummary
+          value={portfolioValue}
+          industries={industries}
+          holdings={holdings}
+        />
         <SummaryCard
           icon={unrealized >= 0 ? <TrendingUp className="h-3.5 w-3.5" /> : <TrendingDown className="h-3.5 w-3.5" />}
           label="P/L"
