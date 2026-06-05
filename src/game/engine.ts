@@ -219,6 +219,18 @@ export function tick(state: GameState, dtSec: number): { state: GameState; earne
     next.events = next.events.filter((e) => e.expiresAt > now);
   }
 
+  // Resolve completed envoys → pay out influence, free the staffer.
+  const envoys = next.envoys ?? [];
+  const completed = envoys.filter((e) => e.endsAt <= now);
+  if (completed.length) {
+    next.envoys = envoys.filter((e) => e.endsAt > now);
+    completed.forEach((env) => {
+      next.marketInfluence = (next.marketInfluence ?? 0) + env.reward;
+      pushTx(next, 'event', `🕊️ Envoy ${env.employeeName} returned — +${env.reward} influence (${env.label})`, 0);
+    });
+  }
+
+
   if ((next.events?.length ?? 0) < 4 && Math.random() < dtSec / 35) {
     const pick = MARKET_EVENT_POOL[Math.floor(Math.random() * MARKET_EVENT_POOL.length)];
     next.events = [...(next.events ?? []), {
