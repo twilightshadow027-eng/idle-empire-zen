@@ -191,6 +191,20 @@ export const useGame = create<Store>((set, get) => ({
   sellStockAction: (id, shares) => set({ state: sellStock(get().state, id, shares) }),
   claimQuestAction: (questId) => set({ state: claimQuest(get().state, questId) }),
 
+  claimDeal: (id, influenceCost, type, multiplier, durationMin) => {
+    const s = get().state;
+    if (s.marketInfluence < influenceCost) return;
+    const boostId = `deal-${id}`;
+    const expiresAt = Date.now() + durationMin * 60 * 1000;
+    const others = s.activeBoosts.filter((b) => b.id !== boostId);
+    const next: GameState = {
+      ...s,
+      marketInfluence: s.marketInfluence - influenceCost,
+      activeBoosts: [...others, { id: boostId, type, multiplier, expiresAt }],
+    };
+    set({ state: withTx(next, 'event', `Forged deal: ${id} (×${multiplier} ${type}, ${durationMin}m)`, 0) });
+  },
+
   clearOffline: () => set({ offlineEarned: 0 }),
   reset: () => {
     // Hard reset: clear storage, blank in-memory state, then reload so every panel resubscribes.
