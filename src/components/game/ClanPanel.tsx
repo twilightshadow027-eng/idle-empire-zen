@@ -120,12 +120,18 @@ export function ClanPanel() {
   const activeBoosts = useGame((s) => s.state.activeBoosts);
   const prestige = useGame((s) => s.state.prestigePoints);
   const totalEarned = useGame((s) => s.state.totalEarned);
+  const money = useGame((s) => s.state.money);
+  const employees = useGame((s) => s.state.employees);
+  const envoys = useGame((s) => s.state.envoys ?? []);
   const doPrestige = useGame((s) => s.prestige);
   const claimDeal = useGame((s) => s.claimDeal);
+  const dispatchEnvoy = useGame((s) => s.dispatchEnvoy);
   const canPrestige = totalEarned >= 5_000_000;
   const ptsGain = Math.floor(Math.sqrt(totalEarned / 5_000_000));
 
   const activeById = new Map(activeBoosts.map((b) => [b.id, b]));
+  const busyIds = new Set(envoys.map((e) => e.employeeId));
+  const available = employees.filter((e) => !busyIds.has(e.id));
 
   return (
     <div className="space-y-4">
