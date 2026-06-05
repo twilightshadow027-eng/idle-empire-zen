@@ -25,6 +25,7 @@ interface Store {
   sellStockAction: (id: IndustryId, shares: number) => void;
   claimQuestAction: (questId: string) => void;
   claimDeal: (id: string, influenceCost: number, type: 'speed' | 'income', multiplier: number, durationMin: number) => void;
+  dispatchEnvoy: (employeeId: string, durationMin: number, cost: number, label: string) => void;
   clearOffline: () => void;
   reset: () => void;
 }
