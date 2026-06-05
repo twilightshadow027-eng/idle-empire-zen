@@ -1,7 +1,7 @@
 import { useGame } from '@/game/store';
 import { useUI } from '@/game/uiStore';
 import { AnimatedCounter } from './AnimatedCounter';
-import { TrendingDown, TrendingUp, Trophy, Sparkles, Gift } from 'lucide-react';
+import { TrendingDown, TrendingUp, Trophy, Sparkles, Gift, ScrollText, Settings } from 'lucide-react';
 import { canClaimToday } from '@/game/engine';
 import { cn } from '@/lib/utils';
 
