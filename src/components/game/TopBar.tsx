@@ -1,7 +1,7 @@
 import { useGame } from '@/game/store';
 import { useUI } from '@/game/uiStore';
 import { AnimatedCounter } from './AnimatedCounter';
-import { TrendingDown, TrendingUp, Trophy, Sparkles, Gift } from 'lucide-react';
+import { TrendingDown, TrendingUp, Trophy, Sparkles, Gift, ScrollText, Settings } from 'lucide-react';
 import { canClaimToday } from '@/game/engine';
 import { cn } from '@/lib/utils';
 
@@ -24,27 +24,25 @@ export function TopBar() {
             <span className="font-display text-lg font-bold text-primary-foreground">E</span>
           </div>
           <div>
-            <div className="font-display text-xs font-semibold uppercase tracking-widest text-muted-foreground">Idle Empire</div>
+            <div className="mb-0.5 flex items-center gap-1">
+              <QuickAction onClick={() => setTab('rewards')} title="Daily reward" pulse={dailyAvailable}>
+                <Gift className="h-3 w-3" />
+              </QuickAction>
+              <QuickAction onClick={() => setTab('ledger')} title="Transaction ledger">
+                <ScrollText className="h-3 w-3" />
+              </QuickAction>
+              <QuickAction onClick={() => setTab('settings')} title="Settings">
+                <Settings className="h-3 w-3" />
+              </QuickAction>
+              <span className="ml-1 font-display text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+                Idle Empire
+              </span>
+            </div>
             <AnimatedCounter value={money} className="font-display text-xl font-bold text-gradient-gold sm:text-2xl" />
           </div>
         </div>
 
         <div className="flex items-center gap-2 sm:gap-3">
-          {dailyAvailable && (
-            <button
-              onClick={() => setTab('rewards')}
-              className={cn(
-                'relative flex items-center gap-1.5 rounded-lg border border-primary/60 bg-primary/15 px-2.5 py-1.5 animate-pulse',
-              )}
-            >
-              <Gift className="h-3.5 w-3.5 text-primary" />
-              <span className="hidden text-xs font-bold text-primary sm:inline">Daily Ready</span>
-              <span className="absolute -right-0.5 -top-0.5 flex h-2.5 w-2.5">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-destructive opacity-75"></span>
-                <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-destructive"></span>
-              </span>
-            </button>
-          )}
           <Badge icon={<Sparkles className="h-3.5 w-3.5" />} label="Influence" value={influence.toString()} color="accent" />
           <Badge icon={<Trophy className="h-3.5 w-3.5" />} label="Prestige" value={prestige.toString()} color="primary" />
         </div>
@@ -66,6 +64,38 @@ export function TopBar() {
         </div>
       </div>
     </header>
+  );
+}
+
+function QuickAction({
+  onClick,
+  title,
+  pulse,
+  children,
+}: {
+  onClick: () => void;
+  title: string;
+  pulse?: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      title={title}
+      aria-label={title}
+      className={cn(
+        'relative inline-flex h-5 w-5 items-center justify-center rounded-md border border-border/60 bg-card/60 text-muted-foreground transition hover:border-primary/60 hover:text-primary',
+        pulse && 'border-primary/60 text-primary'
+      )}
+    >
+      {children}
+      {pulse && (
+        <span className="absolute -right-0.5 -top-0.5 flex h-1.5 w-1.5">
+          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-destructive opacity-75" />
+          <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-destructive" />
+        </span>
+      )}
+    </button>
   );
 }
 

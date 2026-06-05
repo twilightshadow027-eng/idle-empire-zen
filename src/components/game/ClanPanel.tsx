@@ -1,45 +1,143 @@
 import { useGame } from '@/game/store';
 import { formatMoney } from '@/game/engine';
-import { Crown, Shield, Swords, Users, Vault } from 'lucide-react';
+import { Handshake, Sparkles, Zap, TrendingUp, Crown, ShieldCheck, Lock, CheckCircle2 } from 'lucide-react';
+import { cn } from '@/lib/utils';
+
+interface Deal {
+  id: string;
+  name: string;
+  partner: string;
+  description: string;
+  influenceCost: number;
+  type: 'speed' | 'income';
+  multiplier: number;
+  durationMin: number;
+  tier: 1 | 2 | 3;
+}
+
+const DEALS: Deal[] = [
+  {
+    id: 'logistics_pact',
+    name: 'Logistics Pact',
+    partner: 'Harbor Guild',
+    description: 'Streamlined supply chains for every business.',
+    influenceCost: 5,
+    type: 'speed',
+    multiplier: 1.5,
+    durationMin: 10,
+    tier: 1,
+  },
+  {
+    id: 'trade_alliance',
+    name: 'Trade Alliance',
+    partner: 'Merchant Coalition',
+    description: 'Preferred pricing across all your industries.',
+    influenceCost: 8,
+    type: 'income',
+    multiplier: 1.4,
+    durationMin: 15,
+    tier: 1,
+  },
+  {
+    id: 'royal_charter',
+    name: 'Royal Charter',
+    partner: 'Crown Treasury',
+    description: 'A nobility-granted income surcharge.',
+    influenceCost: 20,
+    type: 'income',
+    multiplier: 1.8,
+    durationMin: 20,
+    tier: 2,
+  },
+  {
+    id: 'union_accord',
+    name: 'Union Accord',
+    partner: 'Engineers Union',
+    description: 'Workers run double shifts under your banner.',
+    influenceCost: 25,
+    type: 'speed',
+    multiplier: 2.0,
+    durationMin: 15,
+    tier: 2,
+  },
+  {
+    id: 'oligarch_deal',
+    name: 'Oligarch Deal',
+    partner: 'Shadow Syndicate',
+    description: 'Off-book backers triple your throughput.',
+    influenceCost: 60,
+    type: 'income',
+    multiplier: 2.5,
+    durationMin: 30,
+    tier: 3,
+  },
+  {
+    id: 'global_cooperation',
+    name: 'Global Cooperation',
+    partner: 'UN Trade Council',
+    description: 'World-scale operations, world-scale speed.',
+    influenceCost: 80,
+    type: 'speed',
+    multiplier: 3.0,
+    durationMin: 30,
+    tier: 3,
+  },
+];
 
 export function ClanPanel() {
-  const clan = useGame((s) => s.state.clan);
+  const influence = useGame((s) => s.state.marketInfluence);
+  const activeBoosts = useGame((s) => s.state.activeBoosts);
   const prestige = useGame((s) => s.state.prestigePoints);
   const totalEarned = useGame((s) => s.state.totalEarned);
   const doPrestige = useGame((s) => s.prestige);
+  const claimDeal = useGame((s) => s.claimDeal);
   const canPrestige = totalEarned >= 5_000_000;
   const ptsGain = Math.floor(Math.sqrt(totalEarned / 5_000_000));
 
+  const activeById = new Map(activeBoosts.map((b) => [b.id, b]));
+
   return (
     <div className="space-y-4">
-      <div className="rounded-xl border border-primary/30 bg-gradient-to-br from-primary/10 to-transparent p-4">
+      <div className="rounded-xl border border-accent/30 bg-gradient-to-br from-accent/10 to-transparent p-4">
         <div className="flex items-center gap-3">
-          <Crown className="h-8 w-8 text-primary drop-shadow-[0_0_8px_hsl(var(--primary)/0.6)]" />
-          <div>
-            <div className="font-display text-xl font-bold text-gradient-gold">{clan.name}</div>
-            <div className="text-xs text-muted-foreground">Global Rank #{clan.rank}</div>
+          <Handshake className="h-8 w-8 text-accent drop-shadow-[0_0_8px_hsl(var(--accent)/0.6)]" />
+          <div className="flex-1">
+            <div className="font-display text-lg font-bold text-gradient-gold">Deals &amp; Cooperations</div>
+            <div className="text-xs text-muted-foreground">
+              Spend influence to forge partnerships that boost your empire.
+            </div>
+          </div>
+          <div className="rounded-lg border border-accent/40 bg-background/40 px-3 py-1.5 text-right">
+            <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Influence</div>
+            <div className="flex items-center gap-1 font-display text-lg font-bold text-accent">
+              <Sparkles className="h-3.5 w-3.5" />
+              {influence}
+            </div>
           </div>
         </div>
-        <div className="mt-3 grid grid-cols-3 gap-2 text-center">
-          <Stat icon={<Users className="h-4 w-4" />} label="Members" value={clan.members.toString()} />
-          <Stat icon={<Shield className="h-4 w-4" />} label="Influence" value={clan.influence.toString()} />
-          <Stat icon={<Vault className="h-4 w-4" />} label="Vault" value={formatMoney(clan.vault)} />
-        </div>
       </div>
 
-      <div className="rounded-xl border border-border/60 bg-card-gradient p-4">
-        <div className="flex items-center gap-2">
-          <Swords className="h-4 w-4 text-destructive" />
-          <h3 className="font-display font-semibold">Clan Wars</h3>
-        </div>
-        <p className="mt-1 text-xs text-muted-foreground">
-          Multiplayer wars, alliances, shared vaults, and territory control are coming in Phase 2 (requires Lovable Cloud + realtime backend).
-        </p>
+      <div className="space-y-2">
+        {DEALS.map((deal) => {
+          const active = activeById.get(`deal-${deal.id}`);
+          const isActive = !!active && active.expiresAt > Date.now();
+          const canAfford = influence >= deal.influenceCost;
+          return (
+            <DealCard
+              key={deal.id}
+              deal={deal}
+              canAfford={canAfford}
+              isActive={isActive}
+              expiresAt={active?.expiresAt}
+              onClaim={() => claimDeal(deal.id, deal.influenceCost, deal.type, deal.multiplier, deal.durationMin)}
+            />
+          );
+        })}
       </div>
 
-      <div className="rounded-xl border border-accent/40 bg-gradient-to-br from-accent/10 to-transparent p-4">
+      <div className="rounded-xl border border-primary/40 bg-gradient-to-br from-primary/10 to-transparent p-4">
         <div className="flex items-center gap-2">
-          <Crown className="h-4 w-4 text-accent" />
+          <Crown className="h-4 w-4 text-primary" />
           <h3 className="font-display font-semibold">Prestige</h3>
         </div>
         <div className="mt-1 text-xs text-muted-foreground">
@@ -48,12 +146,12 @@ export function ClanPanel() {
         <div className="mt-2 flex items-center justify-between gap-3">
           <div>
             <div className="text-[11px] uppercase tracking-wider text-muted-foreground">Current</div>
-            <div className="font-display text-lg font-bold text-accent">{prestige} pts</div>
+            <div className="font-display text-lg font-bold text-primary">{prestige} pts</div>
           </div>
           <button
             onClick={doPrestige}
             disabled={!canPrestige}
-            className="rounded-lg bg-gradient-to-b from-accent to-accent/80 px-4 py-2 font-display text-xs font-bold uppercase tracking-wider text-accent-foreground shadow-[0_0_20px_hsl(var(--accent)/0.4)] transition-all hover:scale-105 active:scale-95 disabled:opacity-40 disabled:hover:scale-100"
+            className="rounded-lg bg-gradient-to-b from-primary to-primary-glow px-4 py-2 font-display text-xs font-bold uppercase tracking-wider text-primary-foreground shadow-[0_0_20px_hsl(var(--primary)/0.4)] transition-all hover:scale-105 active:scale-95 disabled:opacity-40 disabled:hover:scale-100"
           >
             Prestige (+{ptsGain})
           </button>
@@ -66,12 +164,83 @@ export function ClanPanel() {
   );
 }
 
-function Stat({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
+function DealCard({
+  deal,
+  canAfford,
+  isActive,
+  expiresAt,
+  onClaim,
+}: {
+  deal: Deal;
+  canAfford: boolean;
+  isActive: boolean;
+  expiresAt?: number;
+  onClaim: () => void;
+}) {
+  const Icon = deal.type === 'speed' ? Zap : TrendingUp;
+  const tierLabel = deal.tier === 1 ? 'Tier I' : deal.tier === 2 ? 'Tier II' : 'Tier III';
+  const tierTone =
+    deal.tier === 1 ? 'border-border/60 text-muted-foreground'
+    : deal.tier === 2 ? 'border-accent/40 text-accent'
+    : 'border-primary/40 text-primary';
+
+  const remaining = isActive && expiresAt ? Math.max(0, expiresAt - Date.now()) : 0;
+  const minsLeft = Math.ceil(remaining / 60000);
+
   return (
-    <div className="rounded-lg bg-background/40 p-2">
-      <div className="flex items-center justify-center gap-1 text-muted-foreground">{icon}</div>
-      <div className="mt-0.5 text-[10px] uppercase tracking-wider text-muted-foreground">{label}</div>
-      <div className="font-display text-sm font-bold">{value}</div>
+    <div className={cn(
+      'rounded-xl border bg-card-gradient p-3 transition',
+      isActive ? 'border-success/50 shadow-[0_0_18px_hsl(var(--success)/0.25)]' : 'border-border/60'
+    )}>
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2">
+            <Icon className={cn('h-4 w-4', deal.type === 'speed' ? 'text-primary' : 'text-success')} />
+            <div className="font-display text-sm font-bold">{deal.name}</div>
+            <span className={cn('rounded-full border px-1.5 py-0 text-[9px] font-bold uppercase tracking-wider', tierTone)}>
+              {tierLabel}
+            </span>
+          </div>
+          <div className="mt-0.5 text-[11px] text-muted-foreground">with {deal.partner}</div>
+          <div className="mt-1 text-xs text-foreground/90">{deal.description}</div>
+          <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px]">
+            <span className="inline-flex items-center gap-1 text-accent">
+              <ShieldCheck className="h-3 w-3" />
+              ×{deal.multiplier} {deal.type}
+            </span>
+            <span className="text-muted-foreground">for {deal.durationMin} min</span>
+          </div>
+        </div>
+        <div className="flex flex-col items-end gap-1.5">
+          <span className="inline-flex items-center gap-1 rounded-md border border-accent/40 bg-accent/10 px-2 py-0.5 text-[10px] font-bold text-accent">
+            <Sparkles className="h-3 w-3" />
+            {deal.influenceCost}
+          </span>
+          {isActive ? (
+            <span className="inline-flex items-center gap-1 rounded-md border border-success/50 bg-success/10 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-success">
+              <CheckCircle2 className="h-3 w-3" />
+              {minsLeft}m left
+            </span>
+          ) : (
+            <button
+              onClick={onClaim}
+              disabled={!canAfford}
+              className={cn(
+                'inline-flex items-center gap-1 rounded-md px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider transition',
+                canAfford
+                  ? 'bg-gradient-to-b from-accent to-accent/80 text-accent-foreground hover:scale-105'
+                  : 'border border-border/40 bg-background/30 text-muted-foreground'
+              )}
+            >
+              {canAfford ? <Handshake className="h-3 w-3" /> : <Lock className="h-3 w-3" />}
+              {canAfford ? 'Forge' : 'Need infl.'}
+            </button>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const _kept = formatMoney;

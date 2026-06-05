@@ -14,7 +14,7 @@ import { SpinWheelPanel } from '@/components/game/SpinWheelPanel';
 import { TransactionsPanel } from '@/components/game/TransactionsPanel';
 import { SettingsPanel } from '@/components/game/SettingsPanel';
 import { OfflineModal } from '@/components/game/OfflineModal';
-import { Briefcase, ChevronUp, Users, LineChart, Crown, Gift, ScrollText, Settings } from 'lucide-react';
+import { Briefcase, ChevronUp, Users, LineChart, Handshake } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 // Wheel feature retired — kept import alive only to satisfy legacy tree.
@@ -25,10 +25,7 @@ const TABS = [
   { id: 'upgrades', label: 'Upgrades', icon: ChevronUp },
   { id: 'employees', label: 'Staff', icon: Users },
   { id: 'market', label: 'Market', icon: LineChart },
-  { id: 'clan', label: 'Clan', icon: Crown },
-  { id: 'rewards', label: 'Daily', icon: Gift },
-  { id: 'ledger', label: 'Ledger', icon: ScrollText },
-  { id: 'settings', label: 'Settings', icon: Settings },
+  { id: 'clan', label: 'Deals', icon: Handshake },
 ] as const;
 
 const Index = () => {

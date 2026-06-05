@@ -24,6 +24,7 @@ interface Store {
   buyStockAction: (id: IndustryId, shares: number) => void;
   sellStockAction: (id: IndustryId, shares: number) => void;
   claimQuestAction: (questId: string) => void;
+  claimDeal: (id: string, influenceCost: number, type: 'speed' | 'income', multiplier: number, durationMin: number) => void;
   clearOffline: () => void;
   reset: () => void;
 }
@@ -189,6 +190,20 @@ export const useGame = create<Store>((set, get) => ({
   buyStockAction: (id, shares) => set({ state: buyStock(get().state, id, shares) }),
   sellStockAction: (id, shares) => set({ state: sellStock(get().state, id, shares) }),
   claimQuestAction: (questId) => set({ state: claimQuest(get().state, questId) }),
+
+  claimDeal: (id, influenceCost, type, multiplier, durationMin) => {
+    const s = get().state;
+    if (s.marketInfluence < influenceCost) return;
+    const boostId = `deal-${id}`;
+    const expiresAt = Date.now() + durationMin * 60 * 1000;
+    const others = s.activeBoosts.filter((b) => b.id !== boostId);
+    const next: GameState = {
+      ...s,
+      marketInfluence: s.marketInfluence - influenceCost,
+      activeBoosts: [...others, { id: boostId, type, multiplier, expiresAt }],
+    };
+    set({ state: withTx(next, 'event', `Forged deal: ${id} (×${multiplier} ${type}, ${durationMin}m)`, 0) });
+  },
 
   clearOffline: () => set({ offlineEarned: 0 }),
   reset: () => {
