@@ -30,7 +30,7 @@ const FILTERS: { id: 'all' | 'income' | 'spend' | TxKind; label: string }[] = [
   { id: 'market_sell', label: 'Sells' },
   { id: 'dividend', label: 'Dividends' },
   { id: 'quest', label: 'Quests' },
-  { id: 'wheel', label: 'Wheel' },
+  { id: 'event', label: 'Events' },
 ];
 
 function fmtTime(ts: number) {
