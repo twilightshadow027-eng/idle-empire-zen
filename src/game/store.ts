@@ -25,7 +25,7 @@ interface Store {
   sellStockAction: (id: IndustryId, shares: number) => void;
   claimQuestAction: (questId: string) => void;
   claimDeal: (id: string, influenceCost: number, type: 'speed' | 'income', multiplier: number, durationMin: number) => void;
-  dispatchEnvoy: (employeeId: string, durationMin: number, cost: number, label: string) => void;
+  dispatchEnvoy: (memberIds: string[], durationMin: number, cost: number, label: string) => void;
   clearOffline: () => void;
   reset: () => void;
 }
@@ -84,7 +84,13 @@ export const useGame = create<Store>((set, get) => ({
 
   hireEmployee: (role) => {
     const s = get().state;
-    const base = role === 'Manager' ? 5000 : role === 'Engineer' ? 8000 : role === 'Spy' ? 12000 : 3000;
+    const base =
+      role === 'Manager' ? 5000 :
+      role === 'Engineer' ? 8000 :
+      role === 'Spy' ? 12000 :
+      role === 'Influencer' ? 9000 :
+      role === 'Coordinator' ? 11000 :
+      3000;
     if (s.money < base) return;
     const name = EMPLOYEE_NAMES[Math.floor(Math.random() * EMPLOYEE_NAMES.length)];
     const emp = {
@@ -168,14 +174,16 @@ export const useGame = create<Store>((set, get) => ({
 
   prestige: () => {
     const s = get().state;
-    // Harder prestige threshold: $5M lifetime earned.
-    if (s.totalEarned < 5_000_000) return;
-    const pts = Math.floor(Math.sqrt(s.totalEarned / 5_000_000));
+    const baseReq = 5_000_000;
+    const req = Math.ceil(baseReq * Math.pow(1.5, s.prestigesDone ?? 0));
+    if (s.totalEarned < req) return;
+    const pts = Math.max(1, Math.floor(Math.sqrt(s.totalEarned / baseReq)));
     const fresh = createInitialState();
     const reset: GameState = {
       ...fresh,
       money: 100,
       prestigePoints: s.prestigePoints + pts,
+      prestigesDone: (s.prestigesDone ?? 0) + 1,
       clan: s.clan,
       lastClaimedDate: s.lastClaimedDate,
       claimStreak: s.claimStreak,
