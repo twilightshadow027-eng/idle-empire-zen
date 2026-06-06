@@ -206,22 +206,60 @@ export const useGame = create<Store>((set, get) => ({
     set({ state: withTx(next, 'event', `Forged deal: ${id} (×${multiplier} ${type}, ${durationMin}m)`, 0) });
   },
 
-  dispatchEnvoy: (employeeId, durationMin, cost, label) => {
+  dispatchEnvoy: (memberIds, durationMin, cost, label) => {
     const s = get().state;
-    const emp = s.employees.find((e) => e.id === employeeId);
-    if (!emp || s.money < cost) return;
-    if ((s.envoys ?? []).some((e) => e.employeeId === employeeId)) return; // already on mission
-    // Reward scales with intelligence, productivity, role, and duration.
-    const roleBonus = emp.role === 'Negotiator' ? 0.6 : emp.role === 'Spy' ? 0.3 : 0;
-    const skill = 0.5 + emp.intelligence / 100 + emp.productivity / 200 + roleBonus;
-    const baseInfluence = Math.max(1, Math.round(durationMin / 5));
-    const reward = Math.max(1, Math.round(baseInfluence * skill));
+    const ids = Array.isArray(memberIds) ? memberIds : [memberIds as unknown as string];
+    if (ids.length < 1 || ids.length > 4) return;
+    const team = ids.map((id) => s.employees.find((e) => e.id === id)).filter(Boolean) as typeof s.employees;
+    if (team.length !== ids.length) return;
+    if (s.money < cost) return;
+    const busy = new Set<string>();
+    (s.envoys ?? []).forEach((e) => {
+      (e.members ?? [e.employeeId]).forEach((m) => busy.add(m));
+    });
+    if (ids.some((id) => busy.has(id))) return; // someone already on a mission
+
+    // Party-size duration multiplier.
+    const sizeMult = ids.length === 1 ? 1 : ids.length === 2 ? 0.85 : ids.length === 3 ? 0.75 : 0.65;
+    // Coordinators on the team further reduce duration.
+    const coordCut = (() => {
+      const coords = team.filter((e) => e.role === 'Coordinator');
+      if (!coords.length) return 0;
+      const raw = coords.reduce((a, e) => a + (e.productivity / 100) * (1 + (e.level - 1) * 0.25), 0);
+      return Math.min(0.5, raw * 0.06);
+    })();
+    const effectiveMin = Math.max(1, durationMin * sizeMult * (1 - coordCut));
+
+    // Influencer-on-team bonus, plus global Influencer staff bonus.
+    const teamInfMult = (() => {
+      const infs = team.filter((e) => e.role === 'Influencer');
+      if (!infs.length) return 1;
+      const raw = infs.reduce((a, e) => a + ((e.productivity + e.intelligence) / 200) * (1 + (e.level - 1) * 0.25), 0);
+      return 1 + Math.min(0.6, raw * 0.06);
+    })();
+    const globalInfMult = (() => {
+      const infs = s.employees.filter((e) => e.role === 'Influencer' && !ids.includes(e.id));
+      if (!infs.length) return 1;
+      const raw = infs.reduce((a, e) => a + ((e.productivity + e.intelligence) / 400) * (1 + (e.level - 1) * 0.25), 0);
+      return 1 + Math.min(0.3, raw * 0.04);
+    })();
+
+    // Per-member base reward — rebalanced ~40% lower than legacy.
+    const perMember = team.reduce((sum, emp) => {
+      const skill = 0.3 + emp.intelligence / 200 + emp.productivity / 300;
+      const base = Math.max(1, durationMin / 8);
+      return sum + base * skill;
+    }, 0);
+    const reward = Math.max(1, Math.round(perMember * teamInfMult * globalInfMult));
+
     const env = {
       id: crypto.randomUUID(),
-      employeeId,
-      employeeName: emp.name,
+      employeeId: ids[0],
+      employeeName: team[0].name,
+      members: ids,
+      memberNames: team.map((e) => e.name),
       startedAt: Date.now(),
-      endsAt: Date.now() + durationMin * 60 * 1000,
+      endsAt: Date.now() + effectiveMin * 60 * 1000,
       cost,
       reward,
       label,
@@ -231,7 +269,8 @@ export const useGame = create<Store>((set, get) => ({
       money: s.money - cost,
       envoys: [...(s.envoys ?? []), env],
     };
-    set({ state: withTx(next, 'event', `🕊️ Dispatched envoy ${emp.name} (${label}) — returns +${reward} infl.`, -cost) });
+    const who = team.map((e) => e.name).join(', ');
+    set({ state: withTx(next, 'event', `🕊️ Dispatched envoy team [${who}] (${label}) — +${reward} infl in ${Math.round(effectiveMin)}m`, -cost) });
   },
 
 

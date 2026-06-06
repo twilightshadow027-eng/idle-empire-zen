@@ -1,8 +1,8 @@
 import { useGame } from '@/game/store';
 import { BUSINESSES } from '@/game/config';
-import { formatMoney, getNegotiatorDiscount, getSecurityDampen } from '@/game/engine';
+import { formatMoney, getInfluencerBonus, getCoordinatorReduction } from '@/game/engine';
 import { EmployeeRole } from '@/game/types';
-import { Briefcase, Calculator, Eye, Wrench, Handshake, Shield, X, Plus, GraduationCap, Sparkles } from 'lucide-react';
+import { Briefcase, Calculator, Eye, Wrench, Megaphone, Compass, X, Plus, GraduationCap, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 type RoleCategory = 'Operations' | 'Finance' | 'Security' | 'Trading';
@@ -37,8 +37,8 @@ export function EmployeesPanel() {
   const train = useGame((s) => s.trainEmployee);
 
   const ownedBiz = BUSINESSES.filter((b) => state.businesses[b.id].owned);
-  const negDisc = getNegotiatorDiscount(state);
-  const secDamp = getSecurityDampen(state);
+  const inflBonus = getInfluencerBonus(state);
+  const coordCut  = getCoordinatorReduction(state);
 
   // Live staff bonuses
   const accIncome = state.employees
@@ -55,10 +55,10 @@ export function EmployeesPanel() {
     <div className="space-y-4">
       {state.employees.length > 0 && (
         <div className="grid grid-cols-2 gap-2 text-[11px] sm:grid-cols-4">
-          <BonusCard label="Income"   value={`×${accIncome.toFixed(2)}`} tone="success" />
-          <BonusCard label="Speed"    value={`×${engSpeed.toFixed(2)}`}  tone="primary" />
-          <BonusCard label="Trade"    value={negDisc > 0 ? `-${(negDisc * 100).toFixed(1)}%` : '—'} tone="accent" />
-          <BonusCard label="Intel"    value={spyBonus > 1 ? `×${spyBonus.toFixed(2)}` : (secDamp > 0 ? `-${(secDamp * 100).toFixed(0)}% risk` : '—')} tone="primary" />
+          <BonusCard label="Income"     value={`×${accIncome.toFixed(2)}`} tone="success" />
+          <BonusCard label="Speed"      value={`×${engSpeed.toFixed(2)}`}  tone="primary" />
+          <BonusCard label="Influence"  value={inflBonus > 1 ? `×${inflBonus.toFixed(2)}` : '—'} tone="accent" />
+          <BonusCard label="Coord."     value={coordCut > 0 ? `-${(coordCut * 100).toFixed(0)}% time` : (spyBonus > 1 ? `×${spyBonus.toFixed(2)} intel` : '—')} tone="primary" />
         </div>
       )}
 
@@ -249,13 +249,16 @@ function CharacterAvatar({
             <div className="absolute top-[42%] right-[16%] h-[20%] w-[22%] rounded-full border border-foreground/70" />
           </>
         )}
-        {role === 'Negotiator' && (
-          // Slick hair stripe
-          <div className="absolute top-0 left-1/2 h-[20%] w-[70%] -translate-x-1/2 rounded-t-full bg-foreground/70" />
+        {role === 'Influencer' && (
+          // Megaphone + bright hair tuft
+          <div className="absolute top-0 left-1/2 h-[22%] w-[70%] -translate-x-1/2 rounded-t-full bg-accent" />
         )}
-        {role === 'Security' && (
-          // Visor band
-          <div className="absolute top-[38%] left-0 h-[18%] w-full bg-foreground/80" />
+        {role === 'Coordinator' && (
+          // Headset band
+          <>
+            <div className="absolute top-[5%] left-[10%] right-[10%] h-[14%] rounded-full bg-foreground/80" />
+            <div className="absolute top-[28%] -left-1 h-[14%] w-[14%] rounded-full bg-foreground/85" />
+          </>
         )}
         {role === 'Spy' && (
           // Sunglasses + small earpiece
