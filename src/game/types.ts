@@ -2,7 +2,10 @@
 export type BusinessId =
   | 'lemonade' | 'grocery' | 'coffee' | 'delivery' | 'logistics' | 'tech'
   | 'casino' | 'oilrig' | 'bank' | 'biotech_lab' | 'space_station'
-  | 'mediaempire' | 'cryptofarm' | 'aifoundry';
+  | 'mediaempire' | 'cryptofarm' | 'aifoundry'
+  | 'gym' | 'carwash' | 'internet_cafe' | 'marketing' | 'manufacturing'
+  | 'retailchain' | 'telecom' | 'pharma_giant' | 'aerospace'
+  | 'robotics' | 'quantum_lab' | 'space_mining' | 'global_fin';
 
 export interface BusinessDef {
   id: BusinessId;
@@ -88,7 +91,7 @@ export interface UpgradeDef {
   effect: { type: 'globalIncome' | 'globalSpeed' | 'businessIncome'; value: number; businessId?: BusinessId };
 }
 
-export type EmployeeRole = 'Manager' | 'Accountant' | 'Spy' | 'Engineer' | 'Negotiator' | 'Security';
+export type EmployeeRole = 'Manager' | 'Accountant' | 'Spy' | 'Engineer' | 'Influencer' | 'Coordinator';
 
 export interface Employee {
   id: string;
@@ -184,12 +187,18 @@ export interface GameState {
   transactions: Transaction[];
   lastDividendLogTs: number;
   envoys: Envoy[];
+  prestigesDone: number;
 }
 
 export interface Envoy {
   id: string;
+  /** Legacy single-member field. New envoys use `members`. */
   employeeId: string;
   employeeName: string;
+  /** Group envoy member employee IDs (1..4). */
+  members?: string[];
+  /** Comma-joined display names of all members. */
+  memberNames?: string[];
   startedAt: number;
   endsAt: number;
   cost: number;

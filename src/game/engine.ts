@@ -62,6 +62,7 @@ export function createInitialState(): GameState {
     transactions: [],
     lastDividendLogTs: 0,
     envoys: [],
+    prestigesDone: 0,
   };
 }
 
@@ -83,6 +84,12 @@ export function loadState(): GameState {
         };
       }
     });
+    // Migrate retired roles → new roles.
+    const migratedEmployees = (parsed.employees ?? []).map((e: any) => {
+      if (e?.role === 'Negotiator') return { ...e, role: 'Influencer' };
+      if (e?.role === 'Security') return { ...e, role: 'Coordinator' };
+      return e;
+    });
     return {
       ...fresh, ...parsed,
       businesses: { ...fresh.businesses, ...parsed.businesses },
@@ -99,6 +106,8 @@ export function loadState(): GameState {
       transactions: parsed.transactions ?? [],
       lastDividendLogTs: parsed.lastDividendLogTs ?? 0,
       envoys: parsed.envoys ?? [],
+      prestigesDone: (parsed as any).prestigesDone ?? 0,
+      employees: migratedEmployees,
     };
   } catch {
     return createInitialState();
@@ -138,8 +147,7 @@ export function getGlobalMultipliers(s: GameState) {
     if (e.role === 'Engineer')   speed  *= 1 + (e.productivity / 1800) * lvl;
     // Spy quietly siphons market intel → small income trickle for the empire.
     if (e.role === 'Spy')        income *= 1 + (e.intelligence / 3000) * lvl;
-    // Security raises overall multiplier slightly by preventing losses from sabotage.
-    if (e.role === 'Security')   income *= 1 + (e.loyalty / 4000) * lvl;
+    // Influencer / Coordinator do NOT change income — their effects apply to influence & envoy duration.
   });
   // Active wheel boosts
   const now = Date.now();
@@ -152,21 +160,30 @@ export function getGlobalMultipliers(s: GameState) {
   return { income, speed, perBiz };
 }
 
-/** Security crew dampens negative event impact on the markets (and your wallet). 0..0.6 */
-export function getSecurityDampen(s: GameState): number {
-  const secs = s.employees.filter((e) => e.role === 'Security');
-  if (!secs.length) return 0;
-  const raw = secs.reduce((a, e) => a + (e.loyalty / 100) * (1 + (e.level - 1) * 0.25), 0);
-  return Math.min(0.6, raw * 0.08);
+/** Legacy hook — Security role retired. Returns 0 so callers stay safe. */
+export function getSecurityDampen(_s: GameState): number {
+  return 0;
 }
 
-/** Returns a multiplier applied to trade cost/proceeds. <1 for buy (discount), >1 for sell (bonus). */
-export function getNegotiatorDiscount(s: GameState): number {
-  const negs = s.employees.filter((e) => e.role === 'Negotiator');
-  if (negs.length === 0) return 0;
-  // sum productivity, level boosts; cap at 15%
-  const raw = negs.reduce((a, e) => a + (e.productivity / 100) * (1 + (e.level - 1) * 0.25), 0);
-  return Math.min(0.15, raw * 0.04);
+/** Legacy hook — Negotiator role retired. Returns 0 so trades pay/charge market price. */
+export function getNegotiatorDiscount(_s: GameState): number {
+  return 0;
+}
+
+/** Influencer bonus multiplier applied to envoy rewards & passive influence. 1..~1.8 */
+export function getInfluencerBonus(s: GameState): number {
+  const infs = s.employees.filter((e) => e.role === 'Influencer');
+  if (!infs.length) return 1;
+  const raw = infs.reduce((a, e) => a + ((e.productivity + e.intelligence) / 200) * (1 + (e.level - 1) * 0.25), 0);
+  return 1 + Math.min(0.8, raw * 0.08);
+}
+
+/** Coordinator envoy-duration reduction. 0..0.5 (cap 50% off). */
+export function getCoordinatorReduction(s: GameState): number {
+  const coords = s.employees.filter((e) => e.role === 'Coordinator');
+  if (!coords.length) return 0;
+  const raw = coords.reduce((a, e) => a + (e.productivity / 100) * (1 + (e.level - 1) * 0.25), 0);
+  return Math.min(0.5, raw * 0.06);
 }
 
 export function tick(state: GameState, dtSec: number): { state: GameState; earned: { id: BusinessId; amount: number }[] } {
@@ -219,14 +236,15 @@ export function tick(state: GameState, dtSec: number): { state: GameState; earne
     next.events = next.events.filter((e) => e.expiresAt > now);
   }
 
-  // Resolve completed envoys → pay out influence, free the staffer.
+  // Resolve completed envoys → pay out influence, free the staff.
   const envoys = next.envoys ?? [];
   const completed = envoys.filter((e) => e.endsAt <= now);
   if (completed.length) {
     next.envoys = envoys.filter((e) => e.endsAt > now);
     completed.forEach((env) => {
       next.marketInfluence = (next.marketInfluence ?? 0) + env.reward;
-      pushTx(next, 'event', `🕊️ Envoy ${env.employeeName} returned — +${env.reward} influence (${env.label})`, 0);
+      const who = env.memberNames?.length ? env.memberNames.join(', ') : env.employeeName;
+      pushTx(next, 'event', `🕊️ Envoy team [${who}] returned — +${env.reward} influence (${env.label})`, 0);
     });
   }
 
@@ -484,7 +502,7 @@ export function spinWheel(state: GameState, empNames: string[], forcedResult?: t
       break;
     }
     case 'employee': {
-      const roles: import('./types').EmployeeRole[] = ['Manager', 'Accountant', 'Spy', 'Engineer', 'Negotiator', 'Security'];
+      const roles: import('./types').EmployeeRole[] = ['Manager', 'Accountant', 'Spy', 'Engineer', 'Influencer', 'Coordinator'];
       const role = roles[Math.floor(Math.random() * roles.length)];
       const base = role === 'Manager' ? 5000 : role === 'Engineer' ? 8000 : role === 'Spy' ? 12000 : 3000;
       const emp = {

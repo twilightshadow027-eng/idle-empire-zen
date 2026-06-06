@@ -5,20 +5,38 @@ export const COST_GROWTH = 1.18;
 export const TICK_MS = 100;
 
 export const BUSINESSES: BusinessDef[] = [
-  { id: 'lemonade',     name: 'Lemonade Stand', icon: '🍋', baseCost: 15,             baseIncome: 1,           productionTime: 1.5, industry: 'food',       unlockAt: 0 },
+  // === Starter ===
+  { id: 'lemonade',     name: 'Street Vendor',  icon: '🍋', baseCost: 15,             baseIncome: 1,           productionTime: 1.5, industry: 'food',       unlockAt: 0 },
   { id: 'grocery',      name: 'Grocery Shop',   icon: '🛒', baseCost: 400,            baseIncome: 16,          productionTime: 3.5, industry: 'food',       unlockAt: 150 },
   { id: 'coffee',       name: 'Coffee Chain',   icon: '☕', baseCost: 4_500,          baseIncome: 95,          productionTime: 7,   industry: 'food',       unlockAt: 1_800 },
-  { id: 'delivery',     name: 'Delivery Co.',   icon: '🚚', baseCost: 45_000,         baseIncome: 720,         productionTime: 12,  industry: 'transport',  unlockAt: 18_000 },
-  { id: 'casino',       name: 'Casino',         icon: '🎰', baseCost: 200_000,        baseIncome: 2_900,       productionTime: 16,  industry: 'luxury',     unlockAt: 75_000 },
-  { id: 'logistics',    name: 'Logistics HQ',   icon: '🏭', baseCost: 600_000,        baseIncome: 6_800,       productionTime: 20,  industry: 'transport',  unlockAt: 200_000 },
-  { id: 'oilrig',       name: 'Oil Rig',        icon: '🛢️', baseCost: 1_800_000,      baseIncome: 17_500,      productionTime: 24,  industry: 'oil',        unlockAt: 700_000 },
-  { id: 'bank',         name: 'Investment Bank',icon: '🏦', baseCost: 3_500_000,      baseIncome: 30_000,      productionTime: 27,  industry: 'banks',      unlockAt: 1_200_000 },
-  { id: 'tech',         name: 'Tech Startup',   icon: '💻', baseCost: 7_500_000,      baseIncome: 58_000,      productionTime: 32,  industry: 'tech',       unlockAt: 3_000_000 },
-  { id: 'mediaempire',  name: 'Media Empire',   icon: '🎬', baseCost: 22_000_000,     baseIncome: 160_000,     productionTime: 35,  industry: 'media',      unlockAt: 9_000_000 },
-  { id: 'biotech_lab',  name: 'Biotech Lab',    icon: '🧬', baseCost: 60_000_000,     baseIncome: 380_000,     productionTime: 40,  industry: 'biotech',    unlockAt: 25_000_000 },
-  { id: 'cryptofarm',   name: 'Crypto Farm',    icon: '⛏️', baseCost: 180_000_000,    baseIncome: 1_050_000,   productionTime: 42,  industry: 'crypto',     unlockAt: 80_000_000 },
-  { id: 'aifoundry',    name: 'AI Foundry',     icon: '🤖', baseCost: 600_000_000,    baseIncome: 3_200_000,   productionTime: 45,  industry: 'ai',         unlockAt: 250_000_000 },
-  { id: 'space_station',name: 'Space Station',  icon: '🛰️', baseCost: 2_400_000_000,  baseIncome: 11_500_000,  productionTime: 50,  industry: 'space',      unlockAt: 1_000_000_000 },
+  // === Local ===
+  { id: 'gym',          name: 'Neighborhood Gym', icon: '🏋️', baseCost: 18_000,        baseIncome: 320,         productionTime: 9,   industry: 'retail',     unlockAt: 6_000 },
+  { id: 'carwash',      name: 'Car Wash',       icon: '🚿', baseCost: 32_000,         baseIncome: 520,         productionTime: 10,  industry: 'retail',     unlockAt: 12_000 },
+  { id: 'internet_cafe',name: 'Internet Café',  icon: '🌐', baseCost: 60_000,         baseIncome: 900,         productionTime: 11,  industry: 'tech',       unlockAt: 25_000 },
+  { id: 'delivery',     name: 'Delivery Co.',   icon: '🚚', baseCost: 120_000,        baseIncome: 1_700,       productionTime: 12,  industry: 'transport',  unlockAt: 50_000 },
+  // === Growth ===
+  { id: 'casino',       name: 'Casino',         icon: '🎰', baseCost: 280_000,        baseIncome: 3_400,       productionTime: 16,  industry: 'luxury',     unlockAt: 95_000 },
+  { id: 'marketing',    name: 'Marketing Agency', icon: '📣', baseCost: 450_000,      baseIncome: 5_200,       productionTime: 18,  industry: 'media',      unlockAt: 160_000 },
+  { id: 'logistics',    name: 'Logistics HQ',   icon: '🏭', baseCost: 800_000,        baseIncome: 8_500,       productionTime: 20,  industry: 'transport',  unlockAt: 260_000 },
+  { id: 'manufacturing',name: 'Manufacturing Plant', icon: '🏗️', baseCost: 1_400_000, baseIncome: 14_500,      productionTime: 22,  industry: 'logistics',  unlockAt: 480_000 },
+  { id: 'retailchain',  name: 'Retail Chain',   icon: '🏬', baseCost: 2_600_000,      baseIncome: 26_000,      productionTime: 24,  industry: 'retail',     unlockAt: 900_000 },
+  // === Corporate ===
+  { id: 'oilrig',       name: 'Oil Rig',        icon: '🛢️', baseCost: 4_800_000,      baseIncome: 44_000,      productionTime: 26,  industry: 'oil',        unlockAt: 1_700_000 },
+  { id: 'bank',         name: 'Investment Bank',icon: '🏦', baseCost: 9_000_000,      baseIncome: 78_000,      productionTime: 27,  industry: 'banks',      unlockAt: 3_200_000 },
+  { id: 'tech',         name: 'Tech Startup',   icon: '💻', baseCost: 18_000_000,     baseIncome: 145_000,     productionTime: 30,  industry: 'tech',       unlockAt: 7_000_000 },
+  { id: 'telecom',      name: 'Telecommunications', icon: '📡', baseCost: 36_000_000, baseIncome: 270_000,     productionTime: 32,  industry: 'tech',       unlockAt: 13_000_000 },
+  { id: 'mediaempire',  name: 'Media Empire',   icon: '🎬', baseCost: 75_000_000,     baseIncome: 520_000,     productionTime: 34,  industry: 'media',      unlockAt: 28_000_000 },
+  { id: 'pharma_giant', name: 'Pharma Giant',   icon: '💊', baseCost: 140_000_000,    baseIncome: 920_000,     productionTime: 36,  industry: 'pharma',     unlockAt: 60_000_000 },
+  { id: 'aerospace',    name: 'Aerospace Contractor', icon: '✈️', baseCost: 260_000_000,baseIncome: 1_650_000,  productionTime: 38,  industry: 'military',   unlockAt: 110_000_000 },
+  { id: 'biotech_lab',  name: 'Biotech Lab',    icon: '🧬', baseCost: 480_000_000,    baseIncome: 2_900_000,   productionTime: 40,  industry: 'biotech',    unlockAt: 200_000_000 },
+  // === Elite ===
+  { id: 'cryptofarm',   name: 'Crypto Farm',    icon: '⛏️', baseCost: 900_000_000,    baseIncome: 5_200_000,   productionTime: 42,  industry: 'crypto',     unlockAt: 380_000_000 },
+  { id: 'aifoundry',    name: 'AI Foundry',     icon: '🤖', baseCost: 1_800_000_000,  baseIncome: 9_500_000,   productionTime: 44,  industry: 'ai',         unlockAt: 750_000_000 },
+  { id: 'robotics',     name: 'Robotics Conglomerate', icon: '🦾', baseCost: 3_500_000_000, baseIncome: 17_000_000, productionTime: 46, industry: 'ai',     unlockAt: 1_500_000_000 },
+  { id: 'quantum_lab',  name: 'Quantum Computing', icon: '⚛️', baseCost: 7_000_000_000, baseIncome: 31_000_000, productionTime: 48,  industry: 'semis',      unlockAt: 3_000_000_000 },
+  { id: 'space_station',name: 'Space Station',  icon: '🛰️', baseCost: 14_000_000_000, baseIncome: 58_000_000,  productionTime: 50,  industry: 'space',      unlockAt: 6_000_000_000 },
+  { id: 'space_mining', name: 'Space Mining Co.', icon: '🪐', baseCost: 28_000_000_000, baseIncome: 110_000_000, productionTime: 52, industry: 'space',      unlockAt: 12_000_000_000 },
+  { id: 'global_fin',   name: 'Global Financial Empire', icon: '🌐', baseCost: 60_000_000_000, baseIncome: 220_000_000, productionTime: 55, industry: 'finance', unlockAt: 25_000_000_000 },
 ];
 
 export const UPGRADES: UpgradeDef[] = [

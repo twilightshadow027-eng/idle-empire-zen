@@ -5,8 +5,8 @@ import { useUI } from '@/game/uiStore';
 import { formatMoney } from '@/game/engine';
 import { INDUSTRY_DIVIDEND, INDUSTRY_CATEGORY, CATEGORY_ORDER, CATEGORY_LABELS } from '@/game/config';
 import type { IndustryCategory, IndustryId, IndustryState, StockHolding, Timeframe } from '@/game/types';
-import { TrendingDown, TrendingUp, Wallet, Briefcase, Coins, ChevronDown, ListOrdered } from 'lucide-react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { TrendingDown, TrendingUp, Wallet, Briefcase, Coins, ChevronDown, ListOrdered, Eye, Banknote } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 
 export function MarketPanel() {
@@ -77,6 +77,7 @@ export function MarketPanel() {
           value={portfolioValue}
           industries={industries}
           holdings={holdings}
+          onSell={sellStock}
         />
         <SummaryCard
           icon={unrealized >= 0 ? <TrendingUp className="h-3.5 w-3.5" /> : <TrendingDown className="h-3.5 w-3.5" />}
@@ -175,11 +176,14 @@ function PortfolioSummary({
   value,
   industries,
   holdings,
+  onSell,
 }: {
   value: number;
   industries: Record<IndustryId, IndustryState>;
   holdings: Record<IndustryId, StockHolding>;
+  onSell: (id: IndustryId, shares: number) => void;
 }) {
+  const focusIndustry = useUI((s) => s.focusIndustry);
   const positions = Object.entries(holdings)
     .filter(([, h]) => h && h.shares > 0)
     .map(([id, h]) => {
@@ -190,6 +194,11 @@ function PortfolioSummary({
       return { id: id as IndustryId, name: ind.name, shares: h.shares, avg: h.avgCost, price: ind.price, mkt, pl };
     })
     .sort((a, b) => b.mkt - a.mkt);
+
+  const [sellTarget, setSellTarget] = useState<{ id: IndustryId; name: string; shares: number; price: number } | null>(null);
+  const [sellQty, setSellQty] = useState(1);
+  const sellMax = sellTarget ? sellTarget.shares : 0;
+  const sellProceeds = sellTarget ? sellTarget.price * Math.min(sellQty, sellMax) : 0;
 
   return (
     <Dialog>
@@ -229,12 +238,18 @@ function PortfolioSummary({
           </div>
         ) : (
           <div className="space-y-1.5">
+            {/* Header row */}
+            <div className="grid grid-cols-[1fr_auto_auto] items-center gap-2 px-3 pb-1 text-[9px] font-bold uppercase tracking-wider text-muted-foreground">
+              <span>Asset</span>
+              <span className="text-right">Market / P/L</span>
+              <span className="text-right">Actions</span>
+            </div>
             {positions.map((p) => (
-              <div key={p.id} className="flex items-center justify-between rounded-lg border border-border/60 bg-card/60 px-3 py-2">
+              <div key={p.id} className="grid grid-cols-[1fr_auto_auto] items-center gap-2 rounded-lg border border-border/60 bg-card/60 px-3 py-2">
                 <div className="min-w-0">
                   <div className="truncate font-display text-sm font-bold">{p.name}</div>
                   <div className="font-mono text-[11px] text-muted-foreground">
-                    {p.shares} sh @ ${p.avg.toFixed(2)} → ${p.price.toFixed(2)}
+                    {p.shares} sh · avg ${p.avg.toFixed(2)} · now ${p.price.toFixed(2)}
                   </div>
                 </div>
                 <div className="text-right">
@@ -243,11 +258,81 @@ function PortfolioSummary({
                     {p.pl >= 0 ? '+' : ''}{formatMoney(p.pl)}
                   </div>
                 </div>
+                <div className="flex items-center gap-1">
+                  <DialogClose asChild>
+                    <button
+                      onClick={() => focusIndustry(p.id)}
+                      title="View chart"
+                      aria-label={`View chart for ${p.name}`}
+                      className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-primary/40 bg-primary/10 text-primary transition hover:bg-primary/20"
+                    >
+                      <Eye className="h-3.5 w-3.5" />
+                    </button>
+                  </DialogClose>
+                  <button
+                    onClick={() => { setSellTarget({ id: p.id, name: p.name, shares: p.shares, price: p.price }); setSellQty(p.shares); }}
+                    title="Sell"
+                    aria-label={`Sell ${p.name}`}
+                    className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-destructive/40 bg-destructive/10 text-destructive transition hover:bg-destructive/20"
+                  >
+                    <Banknote className="h-3.5 w-3.5" />
+                  </button>
+                </div>
               </div>
             ))}
           </div>
         )}
       </DialogContent>
+
+      {/* Sell confirmation */}
+      <Dialog open={!!sellTarget} onOpenChange={(o) => !o && setSellTarget(null)}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Banknote className="h-4 w-4 text-destructive" />
+              Sell {sellTarget?.name}
+            </DialogTitle>
+          </DialogHeader>
+          {sellTarget && (
+            <div className="space-y-3">
+              <div className="rounded-lg border border-border/60 bg-card/60 p-2 text-xs">
+                <div className="flex justify-between"><span className="text-muted-foreground">Held</span><span className="font-mono font-bold">{sellTarget.shares} sh</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Price</span><span className="font-mono font-bold">${sellTarget.price.toFixed(2)}</span></div>
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="number"
+                  min={1}
+                  max={sellMax}
+                  value={sellQty}
+                  onChange={(e) => setSellQty(Math.max(1, Math.min(sellMax, parseInt(e.target.value) || 1)))}
+                  className="w-full rounded-md border border-border/60 bg-background/40 px-2 py-1 text-center font-mono text-sm"
+                />
+                <button onClick={() => setSellQty(Math.max(1, Math.floor(sellMax / 2)))} className="rounded-md border border-border/60 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground hover:text-foreground">½</button>
+                <button onClick={() => setSellQty(sellMax)} className="rounded-md border border-border/60 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground hover:text-foreground">Max</button>
+              </div>
+              <div className="rounded-md border border-success/40 bg-success/10 px-2 py-1 text-center font-mono text-sm font-bold text-success">
+                Proceeds: {formatMoney(sellProceeds)}
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setSellTarget(null)}
+                  className="flex-1 rounded-md border border-border/60 bg-background/40 px-3 py-1.5 text-sm font-bold text-muted-foreground hover:text-foreground"
+                >Cancel</button>
+                <button
+                  onClick={() => {
+                    if (!sellTarget) return;
+                    const q = Math.min(sellQty, sellMax);
+                    if (q > 0) onSell(sellTarget.id, q);
+                    setSellTarget(null);
+                  }}
+                  className="flex-1 rounded-md bg-destructive px-3 py-1.5 text-sm font-bold text-destructive-foreground hover:bg-destructive/90"
+                >Confirm Sell</button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </Dialog>
   );
 }

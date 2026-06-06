@@ -1,11 +1,11 @@
 import { useGame } from '@/game/store';
 import { BUSINESSES } from '@/game/config';
-import { formatMoney, getNegotiatorDiscount, getSecurityDampen } from '@/game/engine';
+import { formatMoney, getInfluencerBonus, getCoordinatorReduction } from '@/game/engine';
 import { EmployeeRole } from '@/game/types';
-import { Briefcase, Calculator, Eye, Wrench, Handshake, Shield, X, Plus, GraduationCap, Sparkles } from 'lucide-react';
+import { Briefcase, Calculator, Eye, Wrench, Megaphone, Compass, X, Plus, GraduationCap, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-type RoleCategory = 'Operations' | 'Finance' | 'Security' | 'Trading';
+type RoleCategory = 'Operations' | 'Finance' | 'Influence' | 'Intelligence';
 
 interface RoleDef {
   role: EmployeeRole;
@@ -19,15 +19,15 @@ interface RoleDef {
 }
 
 const ROLES: RoleDef[] = [
-  { role: 'Manager',    cost: 8_000,  icon: Briefcase,  desc: 'Auto-collects from an assigned business', category: 'Operations', hue: 'bg-primary',     accentHue: 'bg-primary-glow' },
-  { role: 'Engineer',   cost: 12_000, icon: Wrench,     desc: 'Boosts global production speed',          category: 'Operations', hue: 'bg-amber-500',   accentHue: 'bg-amber-300' },
-  { role: 'Accountant', cost: 5_000,  icon: Calculator, desc: 'Raises global income multiplier',         category: 'Finance',    hue: 'bg-emerald-500', accentHue: 'bg-emerald-300' },
-  { role: 'Negotiator', cost: 5_000,  icon: Handshake,  desc: 'Discount on every stock trade',           category: 'Trading',    hue: 'bg-accent',      accentHue: 'bg-accent-glow' },
-  { role: 'Security',   cost: 6_000,  icon: Shield,     desc: 'Dampens negative market events',          category: 'Security',   hue: 'bg-slate-500',   accentHue: 'bg-slate-300' },
-  { role: 'Spy',        cost: 18_000, icon: Eye,        desc: 'Quiet intel siphons extra income',        category: 'Security',   hue: 'bg-violet-600',  accentHue: 'bg-violet-300' },
+  { role: 'Manager',     cost: 8_000,  icon: Briefcase,  desc: 'Auto-collects from an assigned business', category: 'Operations',   hue: 'bg-primary',     accentHue: 'bg-primary-glow' },
+  { role: 'Engineer',    cost: 12_000, icon: Wrench,     desc: 'Boosts global production speed',          category: 'Operations',   hue: 'bg-amber-500',   accentHue: 'bg-amber-300' },
+  { role: 'Accountant',  cost: 5_000,  icon: Calculator, desc: 'Raises global income multiplier',         category: 'Finance',      hue: 'bg-emerald-500', accentHue: 'bg-emerald-300' },
+  { role: 'Influencer',  cost: 9_000,  icon: Megaphone,  desc: 'Boosts influence from envoys & passive',  category: 'Influence',    hue: 'bg-accent',      accentHue: 'bg-accent-glow' },
+  { role: 'Coordinator', cost: 11_000, icon: Compass,    desc: 'Cuts envoy mission duration',             category: 'Influence',    hue: 'bg-sky-500',     accentHue: 'bg-sky-300' },
+  { role: 'Spy',         cost: 18_000, icon: Eye,        desc: 'Quiet intel siphons extra income',        category: 'Intelligence', hue: 'bg-violet-600',  accentHue: 'bg-violet-300' },
 ];
 
-const CATEGORY_ORDER: RoleCategory[] = ['Operations', 'Finance', 'Trading', 'Security'];
+const CATEGORY_ORDER: RoleCategory[] = ['Operations', 'Finance', 'Influence', 'Intelligence'];
 
 export function EmployeesPanel() {
   const state = useGame((s) => s.state);
@@ -37,8 +37,8 @@ export function EmployeesPanel() {
   const train = useGame((s) => s.trainEmployee);
 
   const ownedBiz = BUSINESSES.filter((b) => state.businesses[b.id].owned);
-  const negDisc = getNegotiatorDiscount(state);
-  const secDamp = getSecurityDampen(state);
+  const inflBonus = getInfluencerBonus(state);
+  const coordCut  = getCoordinatorReduction(state);
 
   // Live staff bonuses
   const accIncome = state.employees
@@ -55,10 +55,10 @@ export function EmployeesPanel() {
     <div className="space-y-4">
       {state.employees.length > 0 && (
         <div className="grid grid-cols-2 gap-2 text-[11px] sm:grid-cols-4">
-          <BonusCard label="Income"   value={`×${accIncome.toFixed(2)}`} tone="success" />
-          <BonusCard label="Speed"    value={`×${engSpeed.toFixed(2)}`}  tone="primary" />
-          <BonusCard label="Trade"    value={negDisc > 0 ? `-${(negDisc * 100).toFixed(1)}%` : '—'} tone="accent" />
-          <BonusCard label="Intel"    value={spyBonus > 1 ? `×${spyBonus.toFixed(2)}` : (secDamp > 0 ? `-${(secDamp * 100).toFixed(0)}% risk` : '—')} tone="primary" />
+          <BonusCard label="Income"     value={`×${accIncome.toFixed(2)}`} tone="success" />
+          <BonusCard label="Speed"      value={`×${engSpeed.toFixed(2)}`}  tone="primary" />
+          <BonusCard label="Influence"  value={inflBonus > 1 ? `×${inflBonus.toFixed(2)}` : '—'} tone="accent" />
+          <BonusCard label="Coord."     value={coordCut > 0 ? `-${(coordCut * 100).toFixed(0)}% time` : (spyBonus > 1 ? `×${spyBonus.toFixed(2)} intel` : '—')} tone="primary" />
         </div>
       )}
 
@@ -249,13 +249,16 @@ function CharacterAvatar({
             <div className="absolute top-[42%] right-[16%] h-[20%] w-[22%] rounded-full border border-foreground/70" />
           </>
         )}
-        {role === 'Negotiator' && (
-          // Slick hair stripe
-          <div className="absolute top-0 left-1/2 h-[20%] w-[70%] -translate-x-1/2 rounded-t-full bg-foreground/70" />
+        {role === 'Influencer' && (
+          // Megaphone + bright hair tuft
+          <div className="absolute top-0 left-1/2 h-[22%] w-[70%] -translate-x-1/2 rounded-t-full bg-accent" />
         )}
-        {role === 'Security' && (
-          // Visor band
-          <div className="absolute top-[38%] left-0 h-[18%] w-full bg-foreground/80" />
+        {role === 'Coordinator' && (
+          // Headset band
+          <>
+            <div className="absolute top-[5%] left-[10%] right-[10%] h-[14%] rounded-full bg-foreground/80" />
+            <div className="absolute top-[28%] -left-1 h-[14%] w-[14%] rounded-full bg-foreground/85" />
+          </>
         )}
         {role === 'Spy' && (
           // Sunglasses + small earpiece
