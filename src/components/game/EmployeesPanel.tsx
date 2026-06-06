@@ -5,7 +5,7 @@ import { EmployeeRole } from '@/game/types';
 import { Briefcase, Calculator, Eye, Wrench, Megaphone, Compass, X, Plus, GraduationCap, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-type RoleCategory = 'Operations' | 'Finance' | 'Security' | 'Trading';
+type RoleCategory = 'Operations' | 'Finance' | 'Influence' | 'Intelligence';
 
 interface RoleDef {
   role: EmployeeRole;
@@ -19,15 +19,15 @@ interface RoleDef {
 }
 
 const ROLES: RoleDef[] = [
-  { role: 'Manager',    cost: 8_000,  icon: Briefcase,  desc: 'Auto-collects from an assigned business', category: 'Operations', hue: 'bg-primary',     accentHue: 'bg-primary-glow' },
-  { role: 'Engineer',   cost: 12_000, icon: Wrench,     desc: 'Boosts global production speed',          category: 'Operations', hue: 'bg-amber-500',   accentHue: 'bg-amber-300' },
-  { role: 'Accountant', cost: 5_000,  icon: Calculator, desc: 'Raises global income multiplier',         category: 'Finance',    hue: 'bg-emerald-500', accentHue: 'bg-emerald-300' },
-  { role: 'Negotiator', cost: 5_000,  icon: Handshake,  desc: 'Discount on every stock trade',           category: 'Trading',    hue: 'bg-accent',      accentHue: 'bg-accent-glow' },
-  { role: 'Security',   cost: 6_000,  icon: Shield,     desc: 'Dampens negative market events',          category: 'Security',   hue: 'bg-slate-500',   accentHue: 'bg-slate-300' },
-  { role: 'Spy',        cost: 18_000, icon: Eye,        desc: 'Quiet intel siphons extra income',        category: 'Security',   hue: 'bg-violet-600',  accentHue: 'bg-violet-300' },
+  { role: 'Manager',     cost: 8_000,  icon: Briefcase,  desc: 'Auto-collects from an assigned business', category: 'Operations',   hue: 'bg-primary',     accentHue: 'bg-primary-glow' },
+  { role: 'Engineer',    cost: 12_000, icon: Wrench,     desc: 'Boosts global production speed',          category: 'Operations',   hue: 'bg-amber-500',   accentHue: 'bg-amber-300' },
+  { role: 'Accountant',  cost: 5_000,  icon: Calculator, desc: 'Raises global income multiplier',         category: 'Finance',      hue: 'bg-emerald-500', accentHue: 'bg-emerald-300' },
+  { role: 'Influencer',  cost: 9_000,  icon: Megaphone,  desc: 'Boosts influence from envoys & passive',  category: 'Influence',    hue: 'bg-accent',      accentHue: 'bg-accent-glow' },
+  { role: 'Coordinator', cost: 11_000, icon: Compass,    desc: 'Cuts envoy mission duration',             category: 'Influence',    hue: 'bg-sky-500',     accentHue: 'bg-sky-300' },
+  { role: 'Spy',         cost: 18_000, icon: Eye,        desc: 'Quiet intel siphons extra income',        category: 'Intelligence', hue: 'bg-violet-600',  accentHue: 'bg-violet-300' },
 ];
 
-const CATEGORY_ORDER: RoleCategory[] = ['Operations', 'Finance', 'Trading', 'Security'];
+const CATEGORY_ORDER: RoleCategory[] = ['Operations', 'Finance', 'Influence', 'Intelligence'];
 
 export function EmployeesPanel() {
   const state = useGame((s) => s.state);
