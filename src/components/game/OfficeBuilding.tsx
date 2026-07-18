@@ -36,10 +36,41 @@ export function OfficeBuilding() {
               top: `${(i * 53) % 65}%`,
               opacity: 0.3 + ((i * 7) % 7) / 10,
               boxShadow: '0 0 4px hsl(var(--accent))',
+              animation: `pulse-glow ${2 + (i % 5)}s ease-in-out ${i * 0.1}s infinite`,
             }}
           />
         ))}
       </div>
+
+      {/* Drifting clouds */}
+      <div className="pointer-events-none absolute inset-x-0 top-4 h-16 opacity-30">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <div
+            key={i}
+            className="absolute h-3 rounded-full bg-foreground/40 blur-sm"
+            style={{
+              width: 40 + i * 20,
+              left: `${(i * 40) % 100}%`,
+              top: i * 12,
+              animation: `ticker ${60 + i * 20}s linear infinite`,
+            }}
+          />
+        ))}
+      </div>
+
+      {/* Smoke puffs from higher-tier building */}
+      {tier >= 2 && (
+        <div className="pointer-events-none absolute left-1/2 top-8 -translate-x-1/2">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <span
+              key={i}
+              className="animate-smoke absolute block h-3 w-3 rounded-full bg-muted-foreground/40 blur-[2px]"
+              style={{ left: i * 6 - 6, animationDelay: `${i * 1.2}s` }}
+            />
+          ))}
+        </div>
+      )}
+
 
       {/* Neighbor skyline silhouettes (depth) */}
       <div className="pointer-events-none absolute bottom-12 left-0 right-0 flex items-end justify-around opacity-50">
