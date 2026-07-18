@@ -11,6 +11,13 @@ export function BusinessesPanel() {
   const buy = useGame((s) => s.buy);
   const collect = useGame((s) => s.collect);
   const { income, perBiz } = getGlobalMultipliers(state);
+  const [bursts, setBursts] = useState<Record<string, number>>({});
+  const [squash, setSquash] = useState<Record<string, number>>({});
+  const fireBurst = (id: string) => setBursts((b) => ({ ...b, [id]: (b[id] ?? 0) + 1 }));
+  const fireSquash = (id: string) => {
+    setSquash((s) => ({ ...s, [id]: (s[id] ?? 0) + 1 }));
+    setTimeout(() => setSquash((s) => ({ ...s, [id]: 0 })), 400);
+  };
 
   return (
     <div className="space-y-3">
