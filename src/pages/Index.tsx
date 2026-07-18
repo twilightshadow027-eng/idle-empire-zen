@@ -50,7 +50,8 @@ const Index = () => {
   }, [doTick]);
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-6xl flex-col">
+    <main className="relative mx-auto flex min-h-screen max-w-6xl flex-col">
+      <AmbientParticles />
       <h1 className="sr-only">Idle Empire Builder — Tycoon Game</h1>
       <TopBar />
 
