@@ -54,8 +54,23 @@ export function BusinessesPanel() {
         return (
           <div key={def.id} className={cn(
             'group relative overflow-hidden rounded-xl border border-border/60 bg-card-gradient p-3 transition-all hover:border-primary/40 hover:-translate-y-0.5 hover:shadow-[0_10px_30px_-10px_hsl(var(--primary)/0.4)] animate-slide-in-up',
-            squash[def.id] && 'animate-squash'
+            squash[def.id] && 'animate-squash',
+            flash[def.id] && 'animate-flash',
+            shake[def.id] && 'animate-screen-shake'
           )}>
+            {/* One-shot pulse ring on purchase/upgrade */}
+            {pulseKey[def.id] ? (
+              <span
+                key={pulseKey[def.id]}
+                className="pointer-events-none absolute inset-0 rounded-xl ring-2 ring-primary/70 animate-sparkle-pop"
+                aria-hidden
+              />
+            ) : null}
+            {/* Card-level pixel particle burst */}
+            <div className="pointer-events-none absolute inset-0">
+              <SparkleBurst trigger={pulseKey[def.id] ?? 0} count={12} color="var(--primary)" />
+            </div>
+
             <div className="flex items-center gap-3">
               <button
                 onClick={() => {
@@ -101,7 +116,7 @@ export function BusinessesPanel() {
 
               <button
                 disabled={!canAfford}
-                onClick={() => { if (canAfford) { buy(def.id); fireSquash(def.id); } }}
+                onClick={() => { if (canAfford) { buy(def.id); fireFx(def.id, { shakeStrong: !b.owned }); } }}
                 className={cn(
                   'shrink-0 rounded-lg px-3 py-2 font-display text-xs font-bold uppercase tracking-wider btn-press',
                   canAfford
