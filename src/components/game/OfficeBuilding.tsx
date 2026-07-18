@@ -148,6 +148,33 @@ export function OfficeBuilding() {
         {/* Entrance */}
         <div className="-mt-2 h-2.5 w-6 rounded-t-md bg-accent/70 shadow-[0_0_10px_hsl(var(--accent)/0.7)]" />
 
+        {/* Rotating rooftop gears for industrial vibe (tier 3+) */}
+        {tier >= 3 && (
+          <div className="pointer-events-none absolute -right-2 top-8 flex flex-col gap-1.5 opacity-80">
+            <svg viewBox="0 0 24 24" className="h-5 w-5 animate-gear-spin text-primary/80" fill="currentColor" aria-hidden>
+              <path d="M12 2l1.5 3 3.3-.7L15 7l3 1.5-3 1.5 1.8 2.7-3.3-.7L12 15l-1.5-3-3.3.7L9 10 6 8.5 9 7 7.2 4.3 10.5 5z"/>
+              <circle cx="12" cy="9" r="2" fill="hsl(var(--background))"/>
+            </svg>
+            <svg viewBox="0 0 24 24" className="h-4 w-4 animate-gear-spin-rev text-accent/80" fill="currentColor" aria-hidden>
+              <path d="M12 2l1.5 3 3.3-.7L15 7l3 1.5-3 1.5 1.8 2.7-3.3-.7L12 15l-1.5-3-3.3.7L9 10 6 8.5 9 7 7.2 4.3 10.5 5z"/>
+            </svg>
+          </div>
+        )}
+
+        {/* Rooftop fan (tier 4+) */}
+        {tier >= 4 && (
+          <div className="pointer-events-none absolute -left-2 top-10">
+            <div className="relative h-4 w-4">
+              <span className="animate-fan absolute inset-0 block">
+                <span className="absolute left-1/2 top-1/2 h-0.5 w-4 -translate-x-1/2 -translate-y-1/2 bg-muted-foreground" />
+                <span className="absolute left-1/2 top-1/2 h-4 w-0.5 -translate-x-1/2 -translate-y-1/2 bg-muted-foreground" />
+              </span>
+              <span className="absolute left-1/2 top-1/2 h-1 w-1 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary" />
+            </div>
+          </div>
+        )}
+
+
         {/* Animated worker crowd */}
         <div className="mt-3 flex gap-2">
           {Array.from({ length: Math.min(ownedCount + 1, 6) }).map((_, i) => (
