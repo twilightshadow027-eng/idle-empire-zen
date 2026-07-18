@@ -13,10 +13,19 @@ export function BusinessesPanel() {
   const { income, perBiz } = getGlobalMultipliers(state);
   const [bursts, setBursts] = useState<Record<string, number>>({});
   const [squash, setSquash] = useState<Record<string, number>>({});
+  const [flash, setFlash] = useState<Record<string, number>>({});
+  const [shake, setShake] = useState<Record<string, number>>({});
+  const [pulseKey, setPulseKey] = useState<Record<string, number>>({});
   const fireBurst = (id: string) => setBursts((b) => ({ ...b, [id]: (b[id] ?? 0) + 1 }));
-  const fireSquash = (id: string) => {
+  const fireFx = (id: string, opts: { shakeStrong?: boolean } = {}) => {
     setSquash((s) => ({ ...s, [id]: (s[id] ?? 0) + 1 }));
-    setTimeout(() => setSquash((s) => ({ ...s, [id]: 0 })), 400);
+    setFlash((s) => ({ ...s, [id]: (s[id] ?? 0) + 1 }));
+    setShake((s) => ({ ...s, [id]: (s[id] ?? 0) + 1 }));
+    setPulseKey((s) => ({ ...s, [id]: (s[id] ?? 0) + 1 }));
+    fireBurst(id);
+    setTimeout(() => setSquash((s) => ({ ...s, [id]: 0 })), 420);
+    setTimeout(() => setFlash((s) => ({ ...s, [id]: 0 })), 340);
+    setTimeout(() => setShake((s) => ({ ...s, [id]: 0 })), opts.shakeStrong ? 380 : 320);
   };
 
   return (
