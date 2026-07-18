@@ -1,8 +1,10 @@
+import { useState } from 'react';
 import { useGame } from '@/game/store';
 import { BUSINESSES } from '@/game/config';
 import { businessCost, businessIncome, formatMoney, getGlobalMultipliers } from '@/game/engine';
 import { Lock, TrendingUp, UserCheck } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { SparkleBurst } from './SparkleBurst';
 
 export function BusinessesPanel() {
   const state = useGame((s) => s.state);
