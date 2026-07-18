@@ -13,10 +13,19 @@ export function BusinessesPanel() {
   const { income, perBiz } = getGlobalMultipliers(state);
   const [bursts, setBursts] = useState<Record<string, number>>({});
   const [squash, setSquash] = useState<Record<string, number>>({});
+  const [flash, setFlash] = useState<Record<string, number>>({});
+  const [shake, setShake] = useState<Record<string, number>>({});
+  const [pulseKey, setPulseKey] = useState<Record<string, number>>({});
   const fireBurst = (id: string) => setBursts((b) => ({ ...b, [id]: (b[id] ?? 0) + 1 }));
-  const fireSquash = (id: string) => {
+  const fireFx = (id: string, opts: { shakeStrong?: boolean } = {}) => {
     setSquash((s) => ({ ...s, [id]: (s[id] ?? 0) + 1 }));
-    setTimeout(() => setSquash((s) => ({ ...s, [id]: 0 })), 400);
+    setFlash((s) => ({ ...s, [id]: (s[id] ?? 0) + 1 }));
+    setShake((s) => ({ ...s, [id]: (s[id] ?? 0) + 1 }));
+    setPulseKey((s) => ({ ...s, [id]: (s[id] ?? 0) + 1 }));
+    fireBurst(id);
+    setTimeout(() => setSquash((s) => ({ ...s, [id]: 0 })), 420);
+    setTimeout(() => setFlash((s) => ({ ...s, [id]: 0 })), 340);
+    setTimeout(() => setShake((s) => ({ ...s, [id]: 0 })), opts.shakeStrong ? 380 : 320);
   };
 
   return (
@@ -45,8 +54,23 @@ export function BusinessesPanel() {
         return (
           <div key={def.id} className={cn(
             'group relative overflow-hidden rounded-xl border border-border/60 bg-card-gradient p-3 transition-all hover:border-primary/40 hover:-translate-y-0.5 hover:shadow-[0_10px_30px_-10px_hsl(var(--primary)/0.4)] animate-slide-in-up',
-            squash[def.id] && 'animate-squash'
+            squash[def.id] && 'animate-squash',
+            flash[def.id] && 'animate-flash',
+            shake[def.id] && 'animate-screen-shake'
           )}>
+            {/* One-shot pulse ring on purchase/upgrade */}
+            {pulseKey[def.id] ? (
+              <span
+                key={pulseKey[def.id]}
+                className="pointer-events-none absolute inset-0 rounded-xl ring-2 ring-primary/70 animate-sparkle-pop"
+                aria-hidden
+              />
+            ) : null}
+            {/* Card-level pixel particle burst */}
+            <div className="pointer-events-none absolute inset-0">
+              <SparkleBurst trigger={pulseKey[def.id] ?? 0} count={12} color="var(--primary)" />
+            </div>
+
             <div className="flex items-center gap-3">
               <button
                 onClick={() => {
@@ -92,7 +116,7 @@ export function BusinessesPanel() {
 
               <button
                 disabled={!canAfford}
-                onClick={() => { if (canAfford) { buy(def.id); fireSquash(def.id); } }}
+                onClick={() => { if (canAfford) { buy(def.id); fireFx(def.id, { shakeStrong: !b.owned }); } }}
                 className={cn(
                   'shrink-0 rounded-lg px-3 py-2 font-display text-xs font-bold uppercase tracking-wider btn-press',
                   canAfford
