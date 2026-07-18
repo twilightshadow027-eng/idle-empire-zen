@@ -1,14 +1,23 @@
+import { useState } from 'react';
 import { useGame } from '@/game/store';
 import { BUSINESSES } from '@/game/config';
 import { businessCost, businessIncome, formatMoney, getGlobalMultipliers } from '@/game/engine';
 import { Lock, TrendingUp, UserCheck } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { SparkleBurst } from './SparkleBurst';
 
 export function BusinessesPanel() {
   const state = useGame((s) => s.state);
   const buy = useGame((s) => s.buy);
   const collect = useGame((s) => s.collect);
   const { income, perBiz } = getGlobalMultipliers(state);
+  const [bursts, setBursts] = useState<Record<string, number>>({});
+  const [squash, setSquash] = useState<Record<string, number>>({});
+  const fireBurst = (id: string) => setBursts((b) => ({ ...b, [id]: (b[id] ?? 0) + 1 }));
+  const fireSquash = (id: string) => {
+    setSquash((s) => ({ ...s, [id]: (s[id] ?? 0) + 1 }));
+    setTimeout(() => setSquash((s) => ({ ...s, [id]: 0 })), 400);
+  };
 
   return (
     <div className="space-y-3">
@@ -34,22 +43,31 @@ export function BusinessesPanel() {
         }
 
         return (
-          <div key={def.id} className="group relative overflow-hidden rounded-xl border border-border/60 bg-card-gradient p-3 transition-all hover:border-primary/40 animate-fade-in">
+          <div key={def.id} className={cn(
+            'group relative overflow-hidden rounded-xl border border-border/60 bg-card-gradient p-3 transition-all hover:border-primary/40 hover:-translate-y-0.5 hover:shadow-[0_10px_30px_-10px_hsl(var(--primary)/0.4)] animate-slide-in-up',
+            squash[def.id] && 'animate-squash'
+          )}>
             <div className="flex items-center gap-3">
               <button
-                onClick={() => b.owned && b.progress >= 1 && collect(def.id)}
+                onClick={() => {
+                  if (b.owned && b.progress >= 1) {
+                    collect(def.id);
+                    fireBurst(def.id);
+                  }
+                }}
                 className={cn(
-                  'relative flex h-14 w-14 shrink-0 items-center justify-center rounded-lg text-3xl transition-all',
+                  'relative flex h-14 w-14 shrink-0 items-center justify-center rounded-lg text-3xl transition-all btn-press',
                   b.owned
                     ? 'bg-gradient-to-br from-secondary to-background ring-1 ring-primary/30'
                     : 'bg-secondary',
-                  b.owned && b.progress >= 1 && !b.hasManager && 'animate-pulse-glow cursor-pointer hover:scale-105'
+                  b.owned && b.progress >= 1 && !b.hasManager && 'animate-pulse-glow cursor-pointer'
                 )}
               >
-                <span className="relative z-10">{def.icon}</span>
+                <span className={cn('relative z-10', b.owned && b.progress >= 1 && !b.hasManager && 'animate-bob-rot')}>{def.icon}</span>
                 {b.owned && b.hasManager && (
                   <UserCheck className="absolute -right-1 -top-1 h-4 w-4 rounded-full bg-success p-0.5 text-success-foreground" />
                 )}
+                <SparkleBurst trigger={bursts[def.id] ?? 0} />
               </button>
 
               <div className="min-w-0 flex-1">
@@ -66,7 +84,7 @@ export function BusinessesPanel() {
                 {/* Progress bar */}
                 <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-background/60">
                   <div
-                    className="h-full bg-gradient-to-r from-primary to-primary-glow transition-[width] duration-100"
+                    className={cn('h-full bg-gradient-to-r from-primary to-primary-glow transition-[width] duration-100', b.owned && b.progress > 0.02 && 'bar-shine')}
                     style={{ width: `${b.owned ? b.progress * 100 : 0}%` }}
                   />
                 </div>
@@ -74,11 +92,11 @@ export function BusinessesPanel() {
 
               <button
                 disabled={!canAfford}
-                onClick={() => buy(def.id)}
+                onClick={() => { if (canAfford) { buy(def.id); fireSquash(def.id); } }}
                 className={cn(
-                  'shrink-0 rounded-lg px-3 py-2 font-display text-xs font-bold uppercase tracking-wider transition-all',
+                  'shrink-0 rounded-lg px-3 py-2 font-display text-xs font-bold uppercase tracking-wider btn-press',
                   canAfford
-                    ? 'bg-gradient-to-b from-primary to-primary/80 text-primary-foreground shadow-[0_0_15px_hsl(var(--primary)/0.4)] hover:scale-105 active:scale-95'
+                    ? 'bg-gradient-to-b from-primary to-primary/80 text-primary-foreground shadow-[0_0_15px_hsl(var(--primary)/0.4)]'
                     : 'bg-secondary text-muted-foreground'
                 )}
               >

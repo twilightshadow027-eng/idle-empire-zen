@@ -14,6 +14,7 @@ import { SpinWheelPanel } from '@/components/game/SpinWheelPanel';
 import { TransactionsPanel } from '@/components/game/TransactionsPanel';
 import { SettingsPanel } from '@/components/game/SettingsPanel';
 import { OfflineModal } from '@/components/game/OfflineModal';
+import { AmbientParticles } from '@/components/game/AmbientParticles';
 import { Briefcase, ChevronUp, Users, LineChart, Handshake } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -49,7 +50,8 @@ const Index = () => {
   }, [doTick]);
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-6xl flex-col">
+    <main className="relative mx-auto flex min-h-screen max-w-6xl flex-col">
+      <AmbientParticles />
       <h1 className="sr-only">Idle Empire Builder — Tycoon Game</h1>
       <TopBar />
 

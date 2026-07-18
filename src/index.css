@@ -179,3 +179,141 @@
 }
 .animate-character-blink { animation: character-blink 4s ease-in-out infinite; transform-origin: center; }
 
+/* ======= Polish pass: pixel-crisp animation kit ======= */
+
+/* Pixel-perfect rendering helper */
+.pixel-crisp { image-rendering: pixelated; image-rendering: crisp-edges; }
+
+/* Button interactions */
+.btn-press { transition: transform 120ms cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 200ms ease, filter 200ms ease; will-change: transform; }
+.btn-press:hover:not(:disabled) { transform: translateY(-1px) scale(1.02); }
+.btn-press:active:not(:disabled) { transform: translateY(1px) scale(0.96); }
+.btn-press:disabled { filter: saturate(0.4) brightness(0.8); cursor: not-allowed; }
+
+/* Ripple */
+@keyframes ripple-out {
+  0% { transform: scale(0); opacity: 0.55; }
+  100% { transform: scale(3); opacity: 0; }
+}
+.ripple { position: absolute; inset: 0; overflow: hidden; border-radius: inherit; pointer-events: none; }
+.ripple::after {
+  content: ''; position: absolute; left: 50%; top: 50%;
+  width: 40%; aspect-ratio: 1; border-radius: 9999px;
+  background: hsl(var(--primary) / 0.35);
+  transform: translate(-50%, -50%) scale(0);
+}
+.ripple-active::after { animation: ripple-out 500ms ease-out forwards; }
+
+/* Sparkle burst */
+@keyframes sparkle-pop {
+  0% { transform: translate(-50%, -50%) scale(0) rotate(0); opacity: 0; }
+  30% { opacity: 1; }
+  100% { transform: translate(-50%, -50%) scale(1.6) rotate(180deg); opacity: 0; }
+}
+.animate-sparkle-pop { animation: sparkle-pop 700ms ease-out forwards; }
+
+/* Coin flip */
+@keyframes coin-flip {
+  0% { transform: translateY(0) rotateY(0); }
+  50% { transform: translateY(-18px) rotateY(180deg); }
+  100% { transform: translateY(0) rotateY(360deg); }
+}
+.animate-coin-flip { animation: coin-flip 1.2s ease-in-out infinite; }
+
+/* Progress bar shine */
+@keyframes bar-shine {
+  0% { transform: translateX(-120%); }
+  100% { transform: translateX(220%); }
+}
+.bar-shine { position: relative; overflow: hidden; }
+.bar-shine::after {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(90deg, transparent 0%, hsl(var(--primary-foreground) / 0.35) 50%, transparent 100%);
+  transform: translateX(-120%);
+  animation: bar-shine 2.2s linear infinite;
+  pointer-events: none;
+}
+
+/* Screen shake */
+@keyframes screen-shake {
+  0%, 100% { transform: translate(0, 0); }
+  20% { transform: translate(-3px, 2px); }
+  40% { transform: translate(3px, -2px); }
+  60% { transform: translate(-2px, -1px); }
+  80% { transform: translate(2px, 1px); }
+}
+.animate-screen-shake { animation: screen-shake 320ms ease-in-out; }
+
+/* Rotating gear */
+@keyframes gear-spin { to { transform: rotate(360deg); } }
+.animate-gear-spin { animation: gear-spin 8s linear infinite; transform-origin: center; }
+.animate-gear-spin-rev { animation: gear-spin 12s linear infinite reverse; transform-origin: center; }
+
+/* Fan */
+@keyframes fan-spin { to { transform: rotate(360deg); } }
+.animate-fan { animation: fan-spin 0.6s linear infinite; transform-origin: center; }
+
+/* Smoke puff */
+@keyframes smoke-rise {
+  0% { transform: translateY(0) scale(0.6); opacity: 0; }
+  25% { opacity: 0.5; }
+  100% { transform: translateY(-60px) scale(1.6); opacity: 0; }
+}
+.animate-smoke { animation: smoke-rise 4s ease-out infinite; }
+
+/* Steam */
+@keyframes steam-drift {
+  0% { transform: translate(0,0) scale(0.5); opacity: 0; }
+  40% { opacity: 0.6; }
+  100% { transform: translate(20px,-70px) scale(1.4); opacity: 0; }
+}
+.animate-steam { animation: steam-drift 3.2s ease-out infinite; }
+
+/* Ambient dust motes */
+@keyframes dust-drift {
+  0% { transform: translate(0, 0); opacity: 0; }
+  10% { opacity: 0.7; }
+  90% { opacity: 0.5; }
+  100% { transform: translate(30px, -120px); opacity: 0; }
+}
+.animate-dust { animation: dust-drift 12s linear infinite; }
+
+/* Collectible bob */
+@keyframes bob-rot {
+  0%, 100% { transform: translateY(0) rotate(-3deg); }
+  50% { transform: translateY(-4px) rotate(3deg); }
+}
+.animate-bob-rot { animation: bob-rot 2.4s ease-in-out infinite; }
+
+/* Slide-in panel */
+@keyframes slide-in-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-slide-in-up { animation: slide-in-up 0.35s cubic-bezier(0.34, 1.56, 0.64, 1); }
+
+/* Squash on purchase */
+@keyframes squash {
+  0% { transform: scale(1); }
+  30% { transform: scale(1.08, 0.92); }
+  60% { transform: scale(0.96, 1.05); }
+  100% { transform: scale(1); }
+}
+.animate-squash { animation: squash 380ms ease-out; }
+
+/* Flash */
+@keyframes flash-white {
+  0%, 100% { filter: brightness(1); }
+  40% { filter: brightness(1.8) saturate(1.4); }
+}
+.animate-flash { animation: flash-white 320ms ease-out; }
+
+/* Reduced motion respect */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
