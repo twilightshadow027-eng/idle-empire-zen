@@ -342,6 +342,75 @@
 }
 .animate-flash { animation: flash-white 320ms ease-out; }
 
+/* Aurora drift */
+@keyframes aurora-drift {
+  0%   { transform: translate3d(0,0,0) rotate(0deg) scale(1); opacity: 0.9; }
+  50%  { transform: translate3d(2%, -1%, 0) rotate(6deg) scale(1.05); opacity: 1; }
+  100% { transform: translate3d(-2%, 1%, 0) rotate(-4deg) scale(1.08); opacity: 0.85; }
+}
+
+/* Rainbow border sweep */
+@keyframes rainbow-sweep {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
+}
+.text-gradient-rainbow {
+  background: var(--gradient-rainbow);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: rainbow-sweep 6s linear infinite;
+}
+.border-rainbow {
+  position: relative;
+}
+.border-rainbow::before {
+  content: '';
+  position: absolute; inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  background: var(--gradient-rainbow);
+  background-size: 300% 100%;
+  animation: rainbow-sweep 8s linear infinite;
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+          mask-composite: exclude;
+  pointer-events: none;
+  opacity: 0.6;
+}
+
+/* Neon glow ping for active nav */
+@keyframes neon-ping {
+  0%, 100% { box-shadow: 0 0 10px hsl(var(--primary) / 0.5), inset 0 0 8px hsl(var(--primary) / 0.25); }
+  50%      { box-shadow: 0 0 22px hsl(var(--primary) / 0.9), inset 0 0 14px hsl(var(--primary) / 0.4); }
+}
+.animate-neon-ping { animation: neon-ping 2.4s ease-in-out infinite; }
+
+/* Panel enter */
+@keyframes panel-in {
+  from { opacity: 0; transform: translateY(6px) scale(0.995); filter: blur(4px); }
+  to   { opacity: 1; transform: translateY(0)   scale(1);      filter: blur(0); }
+}
+.animate-panel-in { animation: panel-in 0.35s cubic-bezier(0.22, 1, 0.36, 1); }
+
+/* Hue cycle — subtle color life for hero accents */
+@keyframes hue-cycle {
+  0%, 100% { filter: hue-rotate(0deg); }
+  50%      { filter: hue-rotate(25deg); }
+}
+.animate-hue-cycle { animation: hue-cycle 10s ease-in-out infinite; }
+
+/* Card colored aura on hover */
+.card-aura { position: relative; }
+.card-aura::after {
+  content: ''; position: absolute; inset: -1px; border-radius: inherit;
+  background: conic-gradient(from 0deg, hsl(var(--primary)/0.35), hsl(var(--accent)/0.35), hsl(280 90% 60%/0.3), hsl(var(--primary)/0.35));
+  filter: blur(14px); opacity: 0; transition: opacity 300ms ease; z-index: -1;
+}
+.card-aura:hover::after { opacity: 0.7; }
+
+
 /* Reduced motion respect */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
