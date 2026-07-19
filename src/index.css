@@ -44,6 +44,11 @@
     --gradient-bg: radial-gradient(ellipse at top, hsl(224 50% 15%), hsl(224 47% 7%));
     --gradient-card: linear-gradient(160deg, hsl(224 40% 13%), hsl(224 45% 9%));
     --gradient-building: linear-gradient(180deg, hsl(224 30% 25%), hsl(224 40% 12%));
+    --gradient-aurora: radial-gradient(60% 50% at 15% 10%, hsl(280 90% 55% / 0.22), transparent 70%),
+                       radial-gradient(55% 45% at 85% 20%, hsl(188 95% 55% / 0.20), transparent 70%),
+                       radial-gradient(70% 60% at 50% 100%, hsl(43 96% 56% / 0.18), transparent 70%);
+    --gradient-rainbow: linear-gradient(90deg, hsl(43 96% 56%), hsl(320 90% 60%), hsl(188 95% 55%), hsl(142 76% 50%), hsl(43 96% 56%));
+
 
     --shadow-glow: 0 0 30px hsl(43 96% 56% / 0.4);
     --shadow-accent-glow: 0 0 30px hsl(188 95% 55% / 0.4);
