@@ -79,7 +79,36 @@
     font-family: 'Inter', system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
     overflow-x: hidden;
+    position: relative;
   }
+
+  /* Animated aurora backdrop — pointer-inert, sits above bg, below content */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: -20%;
+    background: var(--gradient-aurora);
+    filter: blur(40px) saturate(1.1);
+    animation: aurora-drift 24s ease-in-out infinite alternate;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Subtle vignette + scanline overlay for arcade feel */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      repeating-linear-gradient(0deg, hsl(0 0% 100% / 0.015) 0 1px, transparent 1px 3px),
+      radial-gradient(ellipse at center, transparent 55%, hsl(224 70% 3% / 0.55) 100%);
+    pointer-events: none;
+    z-index: 1;
+    mix-blend-mode: overlay;
+  }
+
+  #root { position: relative; z-index: 2; }
+
 
   h1, h2, h3, h4 {
     font-family: 'Space Grotesk', system-ui, sans-serif;
