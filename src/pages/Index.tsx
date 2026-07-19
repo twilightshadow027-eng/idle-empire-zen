@@ -99,10 +99,11 @@ const Index = () => {
               >
                 <div className={cn(
                   'flex h-8 w-8 items-center justify-center rounded-lg transition-all',
-                  active && 'bg-primary/15 shadow-[0_0_15px_hsl(var(--primary)/0.4)]'
+                  active ? 'bg-primary/15 animate-neon-ping' : 'hover:bg-primary/10 hover:text-primary'
                 )}>
-                  <Icon className="h-4 w-4" />
+                  <Icon className={cn('h-4 w-4 transition-transform', active && 'scale-110 drop-shadow-[0_0_6px_hsl(var(--primary)/0.9)]')} />
                 </div>
+
                 <span className="font-display text-[9px] font-bold uppercase tracking-wider">{t.label}</span>
               </button>
             );
