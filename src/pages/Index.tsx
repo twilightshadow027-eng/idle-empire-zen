@@ -63,7 +63,7 @@ const Index = () => {
             <MissionsPanel />
           </div>
 
-          <section className="rounded-2xl border border-border/60 bg-card/40 p-3 sm:p-4">
+          <section key={tab} className="animate-panel-in card-aura rounded-2xl border border-border/60 bg-card/40 p-3 sm:p-4">
             {tab === 'businesses' && <BusinessesPanel />}
             {tab === 'upgrades' && <UpgradesPanel />}
             {tab === 'employees' && <EmployeesPanel />}
@@ -73,6 +73,7 @@ const Index = () => {
             {tab === 'ledger' && <TransactionsPanel />}
             {tab === 'settings' && <SettingsPanel />}
           </section>
+
         </div>
 
         <aside className="hidden lg:block">
