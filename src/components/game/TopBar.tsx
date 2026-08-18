@@ -17,14 +17,16 @@ export function TopBar() {
   const tickerItems = Object.values(industries);
 
   return (
-    <header className="sticky top-0 z-30 border-b border-border/60 bg-background/80 backdrop-blur-xl">
+    <header className="sticky top-0 z-30 border-b border-border/70 bg-background/75 shadow-[0_1px_0_hsl(40_20%_96%/0.04)] backdrop-blur-2xl">
       <div className="flex items-center justify-between gap-3 px-4 py-3 sm:px-6">
-        <div className="flex items-center gap-2 sm:gap-4">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-primary-glow shadow-[0_0_20px_hsl(var(--primary)/0.5)]">
-            <span className="font-display text-lg font-bold text-primary-foreground">E</span>
+        <div className="flex items-center gap-3 sm:gap-4">
+          <div className="relative flex h-10 w-10 items-center justify-center rounded-xl border border-primary/30 bg-secondary/60 shadow-[inset_0_1px_0_hsl(40_20%_96%/0.08)]">
+            <span className="font-display text-base font-bold text-gradient-gold">IE</span>
           </div>
           <div>
-            <div className="mb-0.5 flex items-center gap-1">
+            <div className="mb-1 flex items-center gap-1.5">
+              <span className="eyebrow">Idle Empire</span>
+              <span className="h-3 w-px bg-border" />
               <QuickAction onClick={() => setTab('rewards')} title="Daily reward" pulse={dailyAvailable}>
                 <Gift className="h-3 w-3" />
               </QuickAction>
@@ -34,15 +36,12 @@ export function TopBar() {
               <QuickAction onClick={() => setTab('settings')} title="Settings">
                 <Settings className="h-3 w-3" />
               </QuickAction>
-              <span className="ml-1 font-display text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
-                Idle Empire
-              </span>
             </div>
-            <AnimatedCounter value={money} className="font-display text-xl font-bold text-gradient-gold sm:text-2xl" />
+            <AnimatedCounter value={money} className="font-display text-xl font-bold tabular-nums tracking-tight text-foreground sm:text-2xl" />
           </div>
         </div>
 
-        <div className="flex items-center gap-2 sm:gap-3">
+        <div className="flex items-center divide-x divide-border/70 overflow-hidden rounded-xl border border-border/70 bg-card/50">
           <Badge icon={<Sparkles className="h-3.5 w-3.5" />} label="Influence" value={influence.toString()} color="accent" />
           <Badge icon={<Trophy className="h-3.5 w-3.5" />} label="Prestige" value={prestige.toString()} color="primary" />
         </div>
@@ -102,11 +101,11 @@ function QuickAction({
 function Badge({ icon, label, value, color }: { icon: React.ReactNode; label: string; value: string; color: 'primary' | 'accent' }) {
   const c = color === 'primary' ? 'text-primary' : 'text-accent';
   return (
-    <div className="flex items-center gap-1.5 rounded-lg border border-border/60 bg-card/60 px-2.5 py-1.5">
+    <div className="flex items-center gap-2 px-3 py-1.5">
       <span className={c}>{icon}</span>
       <div className="leading-tight">
-        <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</div>
-        <div className={`text-xs font-bold ${c}`}>{value}</div>
+        <div className="text-[9px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">{label}</div>
+        <div className={`font-display text-xs font-bold tabular-nums ${c}`}>{value}</div>
       </div>
     </div>
   );
