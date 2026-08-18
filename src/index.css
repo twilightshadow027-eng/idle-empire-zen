@@ -384,35 +384,40 @@
   opacity: 0.6;
 }
 
-/* Neon glow ping for active nav */
-@keyframes neon-ping {
-  0%, 100% { box-shadow: 0 0 10px hsl(var(--primary) / 0.5), inset 0 0 8px hsl(var(--primary) / 0.25); }
-  50%      { box-shadow: 0 0 22px hsl(var(--primary) / 0.9), inset 0 0 14px hsl(var(--primary) / 0.4); }
+/* Active nav: steady, restrained emphasis (no neon pulsing) */
+.animate-neon-ping {
+  box-shadow: inset 0 0 0 1px hsl(var(--primary) / 0.35), 0 4px 14px -8px hsl(var(--primary) / 0.6);
 }
-.animate-neon-ping { animation: neon-ping 2.4s ease-in-out infinite; }
 
 /* Panel enter */
 @keyframes panel-in {
-  from { opacity: 0; transform: translateY(6px) scale(0.995); filter: blur(4px); }
-  to   { opacity: 1; transform: translateY(0)   scale(1);      filter: blur(0); }
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
-.animate-panel-in { animation: panel-in 0.35s cubic-bezier(0.22, 1, 0.36, 1); }
+.animate-panel-in { animation: panel-in 0.28s cubic-bezier(0.22, 1, 0.36, 1); }
 
-/* Hue cycle — subtle color life for hero accents */
-@keyframes hue-cycle {
-  0%, 100% { filter: hue-rotate(0deg); }
-  50%      { filter: hue-rotate(25deg); }
-}
-.animate-hue-cycle { animation: hue-cycle 10s ease-in-out infinite; }
+.animate-hue-cycle { }
 
-/* Card colored aura on hover */
-.card-aura { position: relative; }
-.card-aura::after {
-  content: ''; position: absolute; inset: -1px; border-radius: inherit;
-  background: conic-gradient(from 0deg, hsl(var(--primary)/0.35), hsl(var(--accent)/0.35), hsl(280 90% 60%/0.3), hsl(var(--primary)/0.35));
-  filter: blur(14px); opacity: 0; transition: opacity 300ms ease; z-index: -1;
+/* Card surface: hairline top light + measured hover lift */
+.card-aura {
+  position: relative;
+  box-shadow: var(--shadow-card), var(--shadow-inset);
+  transition: box-shadow 220ms ease, border-color 220ms ease, transform 220ms ease;
 }
-.card-aura:hover::after { opacity: 0.7; }
+.card-aura:hover {
+  border-color: hsl(var(--primary) / 0.22);
+  box-shadow: var(--shadow-card), var(--shadow-inset), 0 0 0 1px hsl(var(--primary) / 0.1);
+}
+
+/* Panel heading eyebrow */
+.eyebrow {
+  font-family: 'Sora', system-ui, sans-serif;
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: hsl(var(--muted-foreground));
+}
 
 
 /* Reduced motion respect */
