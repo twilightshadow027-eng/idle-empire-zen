@@ -101,11 +101,11 @@ function QuickAction({
 function Badge({ icon, label, value, color }: { icon: React.ReactNode; label: string; value: string; color: 'primary' | 'accent' }) {
   const c = color === 'primary' ? 'text-primary' : 'text-accent';
   return (
-    <div className="flex items-center gap-1.5 rounded-lg border border-border/60 bg-card/60 px-2.5 py-1.5">
+    <div className="flex items-center gap-2 px-3 py-1.5">
       <span className={c}>{icon}</span>
       <div className="leading-tight">
-        <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</div>
-        <div className={`text-xs font-bold ${c}`}>{value}</div>
+        <div className="text-[9px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">{label}</div>
+        <div className={`font-display text-xs font-bold tabular-nums ${c}`}>{value}</div>
       </div>
     </div>
   );
